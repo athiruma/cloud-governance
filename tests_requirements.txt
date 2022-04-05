@@ -1,6 +1,6 @@
-boto3==1.19.12
-elasticsearch==7.10.0
-elasticsearch-dsl==7.4.0
+boto3==1.21.33
+elasticsearch
+elasticsearch-dsl
 moto==2.3.2
 pandas
 requests==2.27.1
