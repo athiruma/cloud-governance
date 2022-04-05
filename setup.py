@@ -3,7 +3,7 @@ from os import path
 from setuptools import setup, find_packages
 
 
-__version__ = '1.0.361'
+__version__ = '1.0.364'
 
 
 here = path.abspath(path.dirname(__file__))
@@ -23,8 +23,10 @@ setup(
     long_description_content_type='text/markdown',
     author='Red Hat',
     author_email='ebattat@redhat.com, athiruma@redhat.com',
-    url='',
+    url='https://github.com/redhat-performance/cloud-governance',
+    license="Apache License 2.0",
     classifiers=[
+        'License :: OSI Approved :: Apache Software License',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
@@ -38,18 +40,19 @@ setup(
     packages=find_packages(include=['cloud_governance', 'cloud_governance.*']),
 
     install_requires=[
-        'pandas',  # latest: aggregate ec2/ebs cluster data
-        'typing==3.7.4.3',
-        'typeguard==2.13.3',  # checking types
         'botocore==1.22.12',  # required by c7n 0.9.14
         'boto3==1.19.12',  # required by c7n 0.9.14
         'c7n==0.9.14',  # custodian
-        'requests==2.27.1',  # rest api & lambda
-        'PyGitHub==1.55',  # gitleaks
         'elasticsearch==7.10.0',  # depend on elasticsearch server
-        "elasticsearch_dsl==7.4.0",
-        "sphinx==4.0.2",
-        "sphinx_rtd_theme==0.4.3",
+        'elasticsearch-dsl==7.4.0',
+        'myst-parser==0.17.0',  # readthedocs
+        'pandas',  # latest: aggregate ec2/ebs cluster data
+        'PyGitHub==1.55',  # gitleaks
+        'requests==2.27.1',  # rest api & lambda
+        'sphinx==4.5.0',  # readthedocs
+        'sphinx-rtd-theme==1.0.0',  # readthedocs
+        'typing==3.7.4.3',
+        'typeguard==2.13.3',  # checking types
     ],
 
     setup_requires=['pytest', 'pytest-runner', 'wheel', 'coverage'],
