@@ -68,6 +68,7 @@ jobs:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
         run: |
+          python -m pip install --upgrade pip
           pip install setuptools wheel twine
           python setup.py sdist bdist_wheel
           twine upload dist/*
@@ -89,6 +90,7 @@ jobs:
                 echo 'wait' "$((current_wait_time+sleep_time))" 'seconds'
                 sleep $sleep_time
                 current_wait_time="$((current_wait_time+sleep_time))"
+                pip uninstall -y cloud-governance
                 pip --no-cache-dir install cloud-governance --upgrade
                 build=$(pip freeze | grep cloud-governance | sed 's/==/=/g')
                 actual_version="$(cut -d'=' -f2 <<<"$build")"
