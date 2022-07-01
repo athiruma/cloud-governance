@@ -5,19 +5,26 @@ from time import strftime
 from ast import literal_eval  # str to dict
 import boto3  # regions
 from cloud_governance.common.logger.logger_time_stamp import logger_time_stamp, logger
+from cloud_governance.cost_expenditure.generate_cost_explorer_report import GenerateCostExplorerReport
 from cloud_governance.tag_cluster.run_tag_cluster_resouces import tag_cluster_resource, remove_cluster_resources_tags
-from cloud_governance.tag_non_cluster.run_tag_non_cluster_resources import tag_non_cluster_resource, \
-    remove_tag_non_cluster_resource, tag_na_resources
-from cloud_governance.tag_user.run_tag_iam_user import tag_iam_user
+from cloud_governance.tag_non_cluster.run_tag_non_cluster_resources import tag_non_cluster_resource, remove_tag_non_cluster_resource, tag_na_resources
+from cloud_governance.tag_user.run_tag_iam_user import tag_iam_user, run_validate_iam_user_tags
 from cloud_governance.zombie_cluster.run_zombie_cluster_resources import zombie_cluster_resource
 from cloud_governance.gitleaks.gitleaks import GitLeaks
 from cloud_governance.main.es_uploader import ESUploader
 from cloud_governance.common.aws.s3.s3_operations import S3Operations
+from cloud_governance.zombie_cluster.validate_zombies import ValidateZombies
 
 # env tests
 # os.environ['AWS_DEFAULT_REGION'] = 'us-east-2'
 # os.environ['AWS_DEFAULT_REGION'] = 'all'
-# os.environ['policy'] = 'tag_non_cluster'
+# os.environ['policy'] = 'cost_explorer'
+# os.environ['validate_type'] = 'tags'
+# os.environ['user_tags'] = "['Budget', 'User', 'Owner', 'Manager', 'Environment', 'Project']"
+# os.environ['cost_metric'] = ''
+# os.environ['start_date'] = ''
+# os.environ['end_date'] = ''
+# os.environ['granularity'] = ''
 # os.environ['policy'] = 'ec2_untag'
 # os.environ['policy'] = 'zombie_cluster_resource'
 # os.environ['dry_run'] = 'yes'
@@ -36,7 +43,9 @@ from cloud_governance.common.aws.s3.s3_operations import S3Operations
 # os.environ['user_tag_operation'] = 'read'
 # os.environ['remove_tags'] = "['Manager', 'Project','Environment', 'Owner', 'Budget']"
 # os.environ['username'] = 'athiruma'
+# os.environ['cost_explorer_tags'] = "['User', 'Budget', 'Project', 'Manager', 'Owner', 'LaunchTime', 'Name', 'Email']"
 # os.environ['file_name'] = 'tag_user.csv'
+# os.environ['file_path'] = ''
 # os.environ['mandatory_tags'] = "{'Budget': 'PERF-DEPT'}"
 # os.environ['mandatory_tags'] = ''
 # os.environ['policy'] = 'gitleaks'
@@ -88,6 +97,39 @@ def run_policy(account: str, policy: str, region: str, dry_run: str):
             remove_cluster_resources_tags(region=region, cluster_name=cluster_name, input_tags=mandatory_tags)
         else:
             tag_cluster_resource(cluster_name=cluster_name, mandatory_tags=mandatory_tags, region=region, tag_operation=tag_operation)
+    elif policy == 'validate_iam_user_tags':
+        es_host = os.environ.get('es_host', '')
+        es_port = os.environ.get('es_port', '')
+        es_index = os.environ.get('es_index', '')
+        validate_type = os.environ.get('validate_type', '')
+        user_tags = os.environ.get('user_tags', {})
+        if user_tags:
+            user_tags = literal_eval(user_tags)
+        run_validate_iam_user_tags(es_host=es_host, es_port=es_port, es_index=es_index, validate_type=validate_type, user_tags=user_tags)
+
+    elif policy == 'cost_explorer':
+        es_host = os.environ.get('es_host', '')
+        es_port = os.environ.get('es_port', '')
+        es_index = os.environ.get('es_index', '')
+        cost_metric = os.environ.get('cost_metric', '')
+        start_date = os.environ.get('start_date', '')
+        end_date = os.environ.get('end_date', '')
+        granularity = os.environ.get('granularity', '')
+        file_name = os.environ.get('file_name', '')
+        cost_explorer_tags = literal_eval(os.environ.get('cost_explorer_tags', {}))
+        if granularity and cost_metric:
+            run_cost_explorer = GenerateCostExplorerReport(cost_tags=cost_explorer_tags, es_host=es_host, es_port=es_port, es_index=es_index, cost_metric=cost_metric, file_name=file_name,
+                                                           start_date=start_date, end_date=end_date, granularity=granularity)
+        else:
+            run_cost_explorer = GenerateCostExplorerReport(cost_tags=cost_explorer_tags, es_host=es_host, es_port=es_port, es_index=es_index, file_name=file_name,
+                                                           start_date=start_date, end_date=end_date)
+        run_cost_explorer.upload_tags_cost_to_elastic_search()
+    elif policy == 'validate_cluster':
+        file_path = os.environ.get('file_path', '')
+        file_name = os.environ.get('file_name', '')
+        file_path = file_path+file_name
+        validate_zombies = ValidateZombies(file_path=file_path, region=region)
+        validate_zombies.read_csv()
     elif policy == 'tag_cluster':
         cluster_name = os.environ.get('resource_name', '')
         mandatory_tags = os.environ.get('mandatory_tags', {})
@@ -128,7 +170,11 @@ def run_policy(account: str, policy: str, region: str, dry_run: str):
         tag_operation = os.environ.get('tag_operation', '')
         file_name = os.environ.get('file_name', '')
         if file_name:
-            tag_na_resources(file_name=file_name, region=region, tag_operation=tag_operation)
+            file_path = os.environ.get('file_path', '')
+            if file_path:
+                tag_na_resources(file_name=file_name, region=region, tag_operation=tag_operation, file_path=file_path)
+            else:
+                tag_na_resources(file_name=file_name, region=region, tag_operation=tag_operation)
         else:
             if mandatory_tags:
                 mandatory_tags = literal_eval(mandatory_tags)  # str to dict
