@@ -57,7 +57,7 @@ jobs:
         chmod 775 /usr/local/bin/terragrunt
     - name: Create instance
       env:
-        IMAGE_NAME: ${{ secrets.IMAGE_ID }}
+        IMAGE_NAME: ${{ secrets.IMAGE_NAME }}
         INSTANCE_TYPE: ${{ secrets.INSTANCE_TYPE }}
         ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
         ROLE_NAME: ${{ secrets.ROLE_NAME }}
@@ -67,7 +67,7 @@ jobs:
         cd tests/integration/cloud_governance/common/tag_non_cluster/terraform
         
         # terrafrom apply
-        terragrunt apply -auto-approve 1> /dev/null
+        terragrunt apply -auto-approve 
         echo "INSTANCE_ID=$(terragrunt output -raw instance_id)" >> "$GITHUB_ENV"
 
     - name: 📃 Unittest and Integration tests with pytest
