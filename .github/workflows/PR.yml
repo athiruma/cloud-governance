@@ -67,8 +67,7 @@ jobs:
         cd tests/integration/cloud_governance/common/tag_non_cluster/terraform
         
         # terrafrom apply
-        cat .terragrunt-cache/../input_vars.tfvars
-        # terragrunt apply -auto-approve 
+        terragrunt apply -auto-approve 1> /dev/null
         # echo "INSTANCE_ID=$(terragrunt output -raw instance_id)" >> "$GITHUB_ENV"
 
     - name: 📃 Unittest and Integration tests with pytest
