@@ -61,7 +61,7 @@ jobs:
         INSTANCE_TYPE: ${{ secrets.INSTANCE_TYPE }}
         ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
         ROLE_NAME: ${{ secrets.ROLE_NAME }}
-        REGION_NAME: ${{ secrets.REGION }}
+        REGION_NAME: ${{ secrets.TERRAFORM_REGION_NAME }}
         TAG_NAME: ${{ secrets.TAG_NAME }}
       run: |
         cd tests/integration/cloud_governance/common/tag_non_cluster/terraform
