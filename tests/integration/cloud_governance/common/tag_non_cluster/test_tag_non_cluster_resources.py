@@ -4,7 +4,7 @@ import boto3
 import pytest
 from cloud_governance.tag_non_cluster.remove_non_cluster_tags import RemoveNonClusterTags
 
-from build.lib.cloud_governance.tag_non_cluster.tag_non_cluster_resources import TagNonClusterResources
+from cloud_governance.tag_non_cluster.tag_non_cluster_resources import TagNonClusterResources
 
 INSTANCE_ID = os.environ.get('INSTANCE_ID', '')
 ec2_client = boto3.client('ec2', region_name='us-east-1')
