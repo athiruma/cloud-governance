@@ -68,8 +68,8 @@ jobs:
         
         # terrafrom apply
         cat .terragrunt-cache/../input_vars.tfvars
-        terragrunt apply -auto-approve 
-        echo "INSTANCE_ID=$(terragrunt output -raw instance_id)" >> "$GITHUB_ENV"
+        # terragrunt apply -auto-approve 
+        # echo "INSTANCE_ID=$(terragrunt output -raw instance_id)" >> "$GITHUB_ENV"
 
     - name: 📃 Unittest and Integration tests with pytest
       env:
