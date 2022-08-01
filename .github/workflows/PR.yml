@@ -48,6 +48,13 @@ jobs:
         mv terragrunt_linux_amd64 terragrunt
         mv terragrunt /usr/local/bin/terragrunt
         chmod 775 /usr/local/bin/terragrunt
+        
+    - name: Configure AWS credentials for pytest
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.REGION }}
     - name: Create AWS Instance
       env:
         IMAGE_ID: ${{ secrets.IMAGE_ID }}
@@ -58,19 +65,12 @@ jobs:
         TAG_NAME: ${{ secrets.TAG_NAME }}
       run: |
         cd tests/integration/cloud_governance/common/tag_non_cluster/terraform/aws_instance
-        
         # terrafrom apply
         terragrunt apply -auto-approve 1> /dev/null
         
         # export instance_id
         echo "INSTANCE_ID=$(terragrunt output -raw instance_id)" >> "$GITHUB_ENV"
 
-    - name: Configure AWS credentials for pytest
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.REGION }}
     - name: 📃 Unittest and Integration tests with pytest
       env:
         BUCKET: ${{ secrets.BUCKET }}
