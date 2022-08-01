@@ -68,7 +68,7 @@ jobs:
         # terrafrom apply
         terragrunt apply -auto-approve 1> /dev/null
         
-        # export instance_id
+        # export instance_id after terraform
         echo "INSTANCE_ID=$(terragrunt output -raw instance_id)" >> "$GITHUB_ENV"
 
     - name: 📃 Unittest and Integration tests with pytest
