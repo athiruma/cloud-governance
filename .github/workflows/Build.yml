@@ -38,7 +38,7 @@ jobs:
           aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.SECRET_ACCESS_KEY }}
           aws-region: us-east-2
-        - name: Terrafrom Install
+      - name: Terrafrom Install
         run: |
           # Install Terrafrom
           
@@ -73,6 +73,7 @@ jobs:
         env:
           BUCKET: ${{ secrets.BUCKET }}
           REGION: ${{ secrets.REGION }}
+          INSTANCE_ID: ${{ env.INSTANCE_ID }}
         run: |
           pytest --cov=cloud_governqance --cov-report=term-missing
           coverage run -m pytest
