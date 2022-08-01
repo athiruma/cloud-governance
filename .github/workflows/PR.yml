@@ -39,23 +39,24 @@ jobs:
         aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.SECRET_ACCESS_KEY }}
         aws-region: ${{ secrets.REGION }}
-    - name: Install Terraform and Terragrunt
+    - name: Terrafrom Install
       run: |
         # Install Terrafrom
-
+        
         sudo apt-get update && sudo apt-get install -y gnupg software-properties-common curl
         curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
         sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
         sudo apt-get -y update && sudo apt-get install -y terraform
-        
+        pip3 install jinja2
+    - name: Install terragrunt
+      run: |
         # install terragrunt
-
+        
         wget https://github.com/gruntwork-io/terragrunt/releases/download/v0.38.6/terragrunt_linux_amd64
         mv terragrunt_linux_amd64 terragrunt
         mv terragrunt /usr/local/bin/terragrunt
         chmod 775 /usr/local/bin/terragrunt
-        
-    - name: Create AWS Instance
+    - name: Create instance
       env:
         IMAGE_ID: ${{ secrets.IMAGE_ID }}
         INSTANCE_TYPE: ${{ secrets.INSTANCE_TYPE }}
@@ -64,13 +65,11 @@ jobs:
         REGION_NAME: ${{ secrets.TERRAFORM_REGION_NAME }}
         TAG_NAME: ${{ secrets.TAG_NAME }}
       run: |
-        cd tests/integration/cloud_governance/common/tag_non_cluster/terraform/aws_instance
+        cd terraform/aws_instance
+        
         # terrafrom apply
         terragrunt apply -auto-approve 1> /dev/null
-        
-        # export instance_id
         echo "INSTANCE_ID=$(terragrunt output -raw instance_id)" >> "$GITHUB_ENV"
-
     - name: 📃 Unittest and Integration tests with pytest
       env:
         BUCKET: ${{ secrets.BUCKET }}
@@ -80,7 +79,7 @@ jobs:
         python -m pytest
     - name: Destroy instance
       run: |    
-        cd tests/integration/cloud_governance/common/tag_non_cluster/terraform/aws_instance
+        cd terraform/aws_instance
         # terraform destroy
         terragrunt destroy -auto-approve 1> /dev/null
 
