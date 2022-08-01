@@ -33,6 +33,38 @@ jobs:
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    - name: Install Terraform and Terragrunt
+      run: |
+        # Install Terrafrom
+
+        sudo apt-get update && sudo apt-get install -y gnupg software-properties-common curl
+        curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+        sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+        sudo apt-get -y update && sudo apt-get install -y terraform
+        
+        # install terragrunt
+
+        wget https://github.com/gruntwork-io/terragrunt/releases/download/v0.38.6/terragrunt_linux_amd64
+        mv terragrunt_linux_amd64 terragrunt
+        mv terragrunt /usr/local/bin/terragrunt
+        chmod 775 /usr/local/bin/terragrunt
+    - name: Create AWS Instance
+      env:
+        IMAGE_ID: ${{ secrets.IMAGE_ID }}
+        INSTANCE_TYPE: ${{ secrets.INSTANCE_TYPE }}
+        ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
+        ROLE_NAME: ${{ secrets.ROLE_NAME }}
+        REGION_NAME: ${{ secrets.TERRAFORM_REGION_NAME }}
+        TAG_NAME: ${{ secrets.TAG_NAME }}
+      run: |
+        cd tests/integration/cloud_governance/common/tag_non_cluster/terraform/aws_instance
+        
+        # terrafrom apply
+        terragrunt apply -auto-approve 1> /dev/null
+        
+        # export instance_id
+        echo "INSTANCE_ID=$(terragrunt output -raw instance_id)" >> "$GITHUB_ENV"
+
     - name: Configure AWS credentials for pytest
       uses: aws-actions/configure-aws-credentials@v1
       with:
@@ -43,8 +75,14 @@ jobs:
       env:
         BUCKET: ${{ secrets.BUCKET }}
         REGION: ${{ secrets.REGION }}
+        INSTANCE_ID: ${{ env.INSTANCE_ID }}
       run: |
         python -m pytest
+    - name: Destroy instance
+      run: |    
+        cd tests/integration/cloud_governance/common/tag_non_cluster/terraform/aws_instance
+        # terraform destroy
+        terragrunt destroy -auto-approve 1> /dev/null
 
   e2e:
     name: e2e
