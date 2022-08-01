@@ -38,6 +38,37 @@ jobs:
           aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.SECRET_ACCESS_KEY }}
           aws-region: us-east-2
+        - name: Terrafrom Install
+        run: |
+          # Install Terrafrom
+          
+          sudo apt-get update && sudo apt-get install -y gnupg software-properties-common curl
+          curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+          sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+          sudo apt-get -y update && sudo apt-get install -y terraform
+          pip3 install jinja2
+      - name: Install terragrunt
+        run: |
+          # install terragrunt
+          
+          wget https://github.com/gruntwork-io/terragrunt/releases/download/v0.38.6/terragrunt_linux_amd64
+          mv terragrunt_linux_amd64 terragrunt
+          mv terragrunt /usr/local/bin/terragrunt
+          chmod 775 /usr/local/bin/terragrunt
+      - name: Create instance
+        env:
+          IMAGE_ID: ${{ secrets.IMAGE_ID }}
+          INSTANCE_TYPE: ${{ secrets.INSTANCE_TYPE }}
+          ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
+          ROLE_NAME: ${{ secrets.ROLE_NAME }}
+          REGION_NAME: ${{ secrets.TERRAFORM_REGION_NAME }}
+          TAG_NAME: ${{ secrets.TAG_NAME }}
+        run: |
+          cd terraform/aws_instance
+          
+          # terrafrom apply
+          terragrunt apply -auto-approve 1> /dev/null
+          echo "INSTANCE_ID=$(terragrunt output -raw instance_id)" >> "$GITHUB_ENV"
       - name: 📃 Unittest and Integration tests with pytest
         env:
           BUCKET: ${{ secrets.BUCKET }}
@@ -52,6 +83,15 @@ jobs:
         run: |
           pip install coveralls
           COVERALLS_REPO_TOKEN=${{ secrets.COVERALLS_REPO_TOKEN }} coveralls
+      - name: Destroy instance
+        env:
+          ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
+          ROLE_NAME: ${{ secrets.ROLE_NAME }}
+          REGION_NAME: ${{ secrets.TERRAFORM_REGION_NAME }}
+        run: |    
+          cd terraform/aws_instance
+          # terraform destroy instance
+          terragrunt destroy -auto-approve 1> /dev/null
 
   pypi_upload:
     name: pypi_upload
