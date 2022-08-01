@@ -81,6 +81,7 @@ jobs:
       run: |    
         cd terraform/aws_instance
         # terraform destroy
+        cat provider.tf
         terragrunt destroy -auto-approve 1> /dev/null
 
   e2e:
