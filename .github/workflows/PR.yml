@@ -92,10 +92,10 @@ jobs:
           terragrunt apply -auto-approve 1> /dev/null
           echo "INSTANCE_ID=$(terragrunt output -raw instance_id)" >> "$GITHUB_OUTPUT"
       - name: Cache the Terraform State File
-          uses: actions/cache@v3
-          with:
-            path: terraform/aws_instance
-            key: terraform-state-${{ steps.terraform_instance_id.outputs.INSTANCE_ID }}
+        uses: actions/cache@v3
+        with:
+          path: terraform/aws_instance
+          key: terraform-state-${{ steps.terraform_instance_id.outputs.INSTANCE_ID }}
 
   integration:
     name: integration
@@ -140,7 +140,6 @@ jobs:
           INSTANCE_ID: ${{ needs.terraform_apply.outputs.INSTANCE_ID }}
         run: |
           python -m pytest -v tests/integration
-
   terraform_destroy:
     name: Terraform Destroy
     needs: [unittest, terraform_apply, integration]
@@ -157,10 +156,10 @@ jobs:
           aws-secret-access-key: ${{ secrets.SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.REGION }}
       - name: Get Cache of the Terraform State File
-          uses: actions/cache@v3
-          with:
-            path: terraform/aws_instance
-            key: terraform-state-${{ needs.terraform_apply.outputs.INSTANCE_ID }}
+        uses: actions/cache@v3
+        with:
+          path: terraform/aws_instance
+          key: terraform-state-${{ needs.terraform_apply.outputs.INSTANCE_ID }}
       - name: Install terraform and terragrunt
         run: |
           # Install Terrafrom
