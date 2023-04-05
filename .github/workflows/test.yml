@@ -1,0 +1,30 @@
+
+name: CloudGovernancePolicies
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run_policies:
+    name: run_policies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.REGION }}
+      - name: Run the CloudGovernance Policies
+        env:
+          OUTPUT_LOGS: ${{ secrets.output_logs }}
+          ERROR_LOGS: ${{ secrets.error_logs }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS_KEY }}
+        run: |
+          podman run --rm --name cloud-governance -e policy="ec2_idle" -e AWS_ACCESS_KEY_ID="" -e AWS_SECRET_ACCESS_KEY="" -e AWS_DEFAULT_REGION="ap-south-1"  -e log_level=INFO quay.io/ebattat/cloud-governance 1> $OUTPUT_LOGS 2>ERROR_LOGS
+          podman run --rm --name cloud-governance -e policy="ec2_idle" -e AWS_ACCESS_KEY_ID="" -e AWS_SECRET_ACCESS_KEY="" -e AWS_DEFAULT_REGION="ap-south-1"  -e log_level=INFO quay.io/ebattat/cloud-governance 1> $OUTPUT_LOGS 2>ERROR_LOGS
+
+        
+      
