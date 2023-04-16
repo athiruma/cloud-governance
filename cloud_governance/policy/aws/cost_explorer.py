@@ -1,4 +1,3 @@
-
 from ast import literal_eval
 
 from cloud_governance.common.clouds.aws.ec2.ec2_operations import EC2Operations
@@ -32,11 +31,12 @@ class CostExplorer:
         self._elastic_upload = ElasticUpload()
         self.__account = self.__environment_variables_dict.get('account').upper().replace('OPENSHIFT-', "").strip()
 
-    def filter_data_by_tag(self, groups: dict, tag: str):
+    def filter_data_by_tag(self, groups: dict, tag: str, savings_plan: str):
         """
         This method extract data by tag
         @param tag:
         @param groups: Data from the cloud explorer
+        @param savings_plan:
         @return: converted into dict format
         """
         data = {}
@@ -58,13 +58,14 @@ class CostExplorer:
                 else:
                     if 'vm_import_image' in name:
                         name = 'vm_import_image'
-                index_id = f'{start_time.lower()}-{account.lower()}-{tag.lower()}-{name.lower()}'
+                index_id = f'{start_time.lower()}-{account.lower()}-{tag.lower()}-savings-{savings_plan}-{name.lower()}'
                 if index_id not in data:
                     upload_data = {tag: name if tag.upper() in ('ChargeType'.upper(), 'PurchaseType'.upper()) else name.upper(),
-                                   'Cost': round(float(amount), 3), 'index_id': index_id, 'timestamp': start_time}
+                                   'Cost': round(float(amount), 3), 'index_id': index_id, 'timestamp': start_time, 'savings_plan': savings_plan}
                     if 'global' in self._elastic_upload.es_index:
                         if 'Budget' not in upload_data:
                             upload_data['Budget'] = self._elastic_upload.account
+                    upload_data['tag'] = tag.lower()
                     data[index_id] = upload_data
                 else:
                     data[index_id]['Cost'] += round(float(amount), 3)
@@ -77,15 +78,32 @@ class CostExplorer:
         """
         data_house = {}
         for tag in self.cost_tags:
-            if self.start_date and self.end_date:
-                response = self.__cost_explorer.get_cost_by_tags(tag=tag, start_date=self.start_date, end_date=self.end_date, granularity=self.granularity, cost_metric=self.cost_metric)
-            else:
-                response = self.__cost_explorer.get_cost_by_tags(tag=tag, granularity=self.granularity, cost_metric=self.cost_metric)
-            results_by_time = response.get('ResultsByTime')
-            if results_by_time:
-                data_house[tag] = []
-                for result in results_by_time:
-                    data_house[tag].extend(self.filter_data_by_tag(result, tag))
+            for savings_plan in ['exclude', 'include']:
+                filters = {}
+                if savings_plan == 'exclude':
+                    filters = {  # removed the savings plan usage from the user costs
+                        'Not': {
+                            'Dimensions': {
+                                        'Key': 'RECORD_TYPE',
+                                        'Values': ['SavingsPlanRecurringFee', 'SavingsPlanNegation', 'SavingsPlanCoveredUsage']
+                                }
+                        }
+                    }
+                if filters:
+                    if self.start_date and self.end_date:
+                        response = self.__cost_explorer.get_cost_by_tags(tag=tag, start_date=self.start_date, end_date=self.end_date, granularity=self.granularity, cost_metric=self.cost_metric, Filter=filters)
+                    else:
+                        response = self.__cost_explorer.get_cost_by_tags(tag=tag, granularity=self.granularity, cost_metric=self.cost_metric, Filter=filters)
+                else:
+                    if self.start_date and self.end_date:
+                        response = self.__cost_explorer.get_cost_by_tags(tag=tag, start_date=self.start_date, end_date=self.end_date, granularity=self.granularity, cost_metric=self.cost_metric)
+                    else:
+                        response = self.__cost_explorer.get_cost_by_tags(tag=tag, granularity=self.granularity, cost_metric=self.cost_metric)
+                results_by_time = response.get('ResultsByTime')
+                if results_by_time:
+                    data_house[f'{tag}-{savings_plan}'] = []
+                    for result in results_by_time:
+                        data_house[f'{tag}-{savings_plan}'].extend(self.filter_data_by_tag(result, tag, savings_plan))
         return data_house
 
     @logger_time_stamp
