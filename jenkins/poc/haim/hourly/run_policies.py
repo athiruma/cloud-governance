@@ -14,6 +14,7 @@ LOGS = os.environ.get('LOGS', 'logs')
 mandatory_tags_appeng = {'Budget': 'APPENG'}
 
 os.system(f"""echo "Running the tag_iam_user" """)
+os.system(f"""echo "podman run --rm --name cloud-governance-poc-haim --net="host" -e account="APPENG" -e -e EMAIL_ALERT="False" -e policy="tag_iam_user" -e AWS_ACCESS_KEY_ID="{AWS_ACCESS_KEY_ID_APPENG}" -e AWS_SECRET_ACCESS_KEY="{AWS_SECRET_ACCESS_KEY_APPENG}" -e user_tag_operation="update" -e SPREADSHEET_ID="{SPREADSHEET_ID}" -e GOOGLE_APPLICATION_CREDENTIALS="{GOOGLE_APPLICATION_CREDENTIALS}" -v "{GOOGLE_APPLICATION_CREDENTIALS}":"{GOOGLE_APPLICATION_CREDENTIALS}" -e LDAP_HOST_NAME="{LDAP_HOST_NAME}"  -e log_level="INFO" quay.io/ebattat/cloud-governance:latest" """)
 os.system(f"""podman run --rm --name cloud-governance-poc-haim --net="host" -e account="APPENG" -e -e EMAIL_ALERT="False" -e policy="tag_iam_user" -e AWS_ACCESS_KEY_ID="{AWS_ACCESS_KEY_ID_APPENG}" -e AWS_SECRET_ACCESS_KEY="{AWS_SECRET_ACCESS_KEY_APPENG}" -e user_tag_operation="update" -e SPREADSHEET_ID="{SPREADSHEET_ID}" -e GOOGLE_APPLICATION_CREDENTIALS="{GOOGLE_APPLICATION_CREDENTIALS}" -v "{GOOGLE_APPLICATION_CREDENTIALS}":"{GOOGLE_APPLICATION_CREDENTIALS}" -e LDAP_HOST_NAME="{LDAP_HOST_NAME}"  -e log_level="INFO" quay.io/ebattat/cloud-governance:latest""")
 
 
