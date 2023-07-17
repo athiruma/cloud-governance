@@ -1,6 +1,11 @@
-## Configure Jenkins slave to master
 
-### Install Java-11 based on OS
+# Step-by-Step Instructions to create cloud-governance jenkins job
+1. Run for every new account. [Link](./CREATE_AWS_ACCOUNT.md)
+2. Run once per Jenkins slave. [Link](./Step_by_Step.md)
+
+## Configure Jenkins slave to master [ one time activity ]
+
+### Install Java-11 based on OS 
 rhel8
 ```commandline
 sudo yum install java-11-openjdk-devel
@@ -45,7 +50,7 @@ ssh-keygen
 cat .ssh/id_rsa.pub >> .ssh/authorized_keys
 ```
 
-### Connect to Jenkins Master with your node
+### Connect to Jenkins Master with your node [ one time activity ]
 
 Open Jenkins master
 1. Manage Jenkins
@@ -75,7 +80,7 @@ docker images
 
 Now you are ready to run the cloud-governance policies
 
-### Run the ElasticSearch, Grafana, Kibana as a container within the same network
+### Run the ElasticSearch, Grafana, Kibana as a container within the same network [ one time activity ]
 
 #### Using the docker engine
 ```commandline
@@ -108,7 +113,7 @@ podman play kube --down file.yml
 ```
 
 
-## How to create a new user and s3 bucket on AWS
+## How to create a new user and s3 bucket on AWS [ one time activity ]
 
 Goto IAM Services to create policy and user
 
