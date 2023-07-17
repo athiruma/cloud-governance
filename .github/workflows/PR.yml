@@ -5,6 +5,7 @@ name: PR
 
 on:
   pull_request_target:
+    types: [labeled, opened, synchronize]
     branches: [ main ]
 
 jobs:
@@ -14,6 +15,8 @@ jobs:
     strategy:
       matrix:
         python-version: [ '3.8', '3.9', '3.10' ]
+    # minimize potential vulnerabilities
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'ok-to-test') }}
     steps:
     - uses: actions/checkout@v3
       with:
@@ -25,6 +28,7 @@ jobs:
     - name: Install dependencies
       run: |
         # ldap requirements
+        sudo apt update -y
         sudo apt-get install build-essential python3-dev libldap2-dev libsasl2-dev vim -y
         python -m pip install --upgrade pip
         pip install flake8 pytest pytest-cov
@@ -129,6 +133,7 @@ jobs:
       - name: Install dependencies
         run: |
           # ldap requirements
+          sudo apt update -y
           sudo apt-get install build-essential python3-dev libldap2-dev libsasl2-dev vim -y
           python -m pip install --upgrade pip
           pip install flake8 pytest pytest-cov
@@ -146,6 +151,13 @@ jobs:
           aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.REGION }}
+      - name: Set GCP credentials for pytest
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS_CONTENTS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+          RUNNER_PATH: ${{ secrets.RUNNER_PATH }}
+        run: |
+          echo "$GOOGLE_APPLICATION_CREDENTIALS_CONTENTS" > "$RUNNER_PATH/gcp_service.json"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_PATH/gcp_service.json" >> "$GITHUB_ENV"
       - name: 📃 Integration tests with pytest
         env:
           BUCKET: ${{ secrets.BUCKET }}
@@ -156,6 +168,8 @@ jobs:
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          GCP_DATABASE_NAME: ${{ secrets.GCP_DATABASE_NAME }}
+          GCP_DATABASE_TABLE_NAME: ${{ secrets.GCP_DATABASE_TABLE_NAME }}
         run: |
           python -m pytest -v tests/integration
 
@@ -219,6 +233,7 @@ jobs:
       - name: Install dependencies
         run: |
           # ldap requirements
+          sudo apt update -y
           sudo apt-get install build-essential python3-dev libldap2-dev libsasl2-dev vim -y
           python -m pip install --upgrade pip
           pip install flake8 pytest pytest-cov

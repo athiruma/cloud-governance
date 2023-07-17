@@ -12,6 +12,7 @@ class TagClusterResources(TagClusterOperations):
     """
 
     SHORT_ID = 5
+    NA_VALUE = 'NA'
 
     def __init__(self, cluster_name: str = None, cluster_prefix: str = None, input_tags: dict = None,
                  region: str = 'us-east-2', dry_run: str = 'yes', cluster_only: bool = False):
@@ -107,7 +108,7 @@ class TagClusterResources(TagClusterOperations):
     def __generate_cluster_resources_list_by_tag(self, resources_list: list, input_resource_id: str,
                                                  tags: str = 'Tags'):
         """
-        This method return resource list that related to input resource id according to cluster's tag name and update the tags
+        This method returns resource list that related to input resource id according to cluster's tag name and update the tags
         @param resources_list:
         @param input_resource_id:
         @param ids:
@@ -141,10 +142,7 @@ class TagClusterResources(TagClusterOperations):
         for cluster_name, cluster_id in cluster_ids.items():
             if self.dry_run == 'no':
                 try:
-                    if self.cluster_name in cluster_name:
-                        self.ec2_client.create_tags(Resources=cluster_id, Tags=cluster_tags.get(cluster_name))
-                    else:
-                        self.ec2_client.create_tags(Resources=cluster_id, Tags=cluster_tags.get(cluster_name))
+                    self.utils.tag_aws_resources(client_method=self.ec2_client.create_tags, resource_ids=cluster_id, tags=cluster_tags.get(cluster_name))
                     logger.info(f'{input_resource_id}:: {cluster_name}, count: {len(cluster_id)}, {cluster_id},  {cluster_tags.get(cluster_name)}')
                 except Exception as err:
                     logger.info(err)
@@ -153,7 +151,7 @@ class TagClusterResources(TagClusterOperations):
 
     def __generate_cluster_resources_list_by_vpc(self, resources_list: list, input_resource_id: str):
         """
-        This method return resource list that related to input resource id according to cluster's vpc id
+        This method returns resource list that related to input resource id according to cluster's vpc id
         @param resources_list:
         @param input_resource_id:
         @return:
@@ -174,12 +172,12 @@ class TagClusterResources(TagClusterOperations):
                             if self.cluster_name:
                                 if self.cluster_name in cluster_tag[0].get('Key'):
                                     if self.dry_run == 'no':
-                                        self.ec2_client.create_tags(Resources=[resource_id], Tags=all_tags)
+                                        self.utils.tag_aws_resources(client_method=self.ec2_client.create_tags, resource_ids=[resource_id],  tags=all_tags)
                                         logger.info(all_tags)
                                     result_resources_list.append(resource_id)
                             else:
                                 if self.dry_run == 'no':
-                                    self.ec2_client.create_tags(Resources=[resource_id], Tags=all_tags)
+                                    self.utils.tag_aws_resources(client_method=self.ec2_client.create_tags, resource_ids=[resource_id], tags=all_tags)
                                     logger.info(all_tags)
                                 result_resources_list.append(resource_id)
                         break
@@ -229,11 +227,14 @@ class TagClusterResources(TagClusterOperations):
         @param tags:
         @return:
         """
+        check_tags = ['User', 'Project', 'Manager', 'Owner', 'Email']
+        tag_count = 0
         for tag in tags:
-            for key, value in self.input_tags.items():
-                if tag.get('Key') == key:
-                    return True
-        return False
+            if tag.get('Key') in check_tags:
+                tag_count += 1
+                if tag.get('Value') == 'NA':
+                    return False
+        return tag_count == len(check_tags)
 
     def update_cluster_tags(self, resources: list):
         """
@@ -248,24 +249,22 @@ class TagClusterResources(TagClusterOperations):
         for instance in resources:
             for item in instance:
                 instance_id = item['InstanceId']
-                if item.get('Tags'):
+                tags = item.get('Tags')
+                if tags:
                     # search that not exist permanent tags in the resource
-                    if not self.__validate_existing_tag(item.get('Tags')):
-                        for tag in item['Tags']:
+                    if not self.__validate_existing_tag(tags):
+                        for tag in tags:
                             if self.cluster_prefix in tag.get('Key'):
                                 add_tags = self.__append_input_tags()
                                 cluster_name = tag.get('Key').split('/')[-1]
-                                if cluster_name in cluster_instances:
-                                    add_tags = self.__filter_resource_tags_by_add_tags(tags=item.get('Tags'),
-                                                                                       search_tags=cluster_tags[
-                                                                                           cluster_name])
+                                user = self.ec2_operations.get_tag_value_from_tags(tags=tags, tag_name='User')
+                                if cluster_name in cluster_instances and user and user != 'NA':
+                                    add_tags = self.__filter_resource_tags_by_add_tags(tags=tags, search_tags=cluster_tags[cluster_name])
                                     if add_tags:
                                         cluster_instances[cluster_name].append(instance_id)
                                     break
                                 else:
-                                    username = self._get_username_from_instance_id_and_time(
-                                        start_time=item.get('LaunchTime'), resource_id=instance_id,
-                                        resource_type='AWS::EC2::Instance')
+                                    username = self.get_username(start_time=item.get('LaunchTime'), resource_id=instance_id, resource_type='AWS::EC2::Instance', tags=tags)
                                     if username:
                                         if username == 'AutoScaling':
                                             add_tags.extend(self._fill_na_tags(user=username))
@@ -294,17 +293,13 @@ class TagClusterResources(TagClusterOperations):
                                     add_tags = self.__filter_resource_tags_by_add_tags(tags=item.get('Tags'),
                                                                                        search_tags=add_tags)
                                     if add_tags:
-                                        cluster_instances[cluster_name] = [instance_id]
+                                        cluster_instances.setdefault(cluster_name, []).append(instance_id)
                                         cluster_tags[cluster_name] = add_tags
                                     break
         for cluster_instance_name, instance_ids in cluster_instances.items():
             if self.dry_run == 'no':
                 try:
-                    if self.cluster_name:
-                        if cluster_instance_name == self.cluster_name:
-                            self.ec2_client.create_tags(Resources=instance_ids, Tags=cluster_tags.get(cluster_instance_name))
-                    else:
-                        self.ec2_client.create_tags(Resources=instance_ids, Tags=cluster_tags.get(cluster_instance_name))
+                    self.utils.tag_aws_resources(client_method=self.ec2_client.create_tags, resource_ids=instance_ids, tags=cluster_tags.get(cluster_instance_name))
                     logger.info(f'Cluster :: {cluster_instance_name} count: {len(instance_ids)} :: InstanceId :: {instance_ids} :: {cluster_tags.get(cluster_instance_name)}')
                 except Exception as err:
                     logger.info(err)
@@ -318,7 +313,7 @@ class TagClusterResources(TagClusterOperations):
 
     def cluster_instance(self):
         """
-        This method return list of cluster's instance according to cluster tag name,
+        This method returns list of cluster's instance according to cluster tag name,
         The instances list is different from other resources
         it will search for full cluster name (including random suffix string) in case of user input cluster name was given
         @return:
@@ -339,7 +334,7 @@ class TagClusterResources(TagClusterOperations):
 
     def cluster_volume(self):
         """
-        This method return list of cluster's volume according to cluster tag name
+        This method returns list of cluster's volume according to cluster tag name
         @return:
         """
         volumes_data = self.ec2_operations.get_volumes()
@@ -353,7 +348,7 @@ class TagClusterResources(TagClusterOperations):
 
     def cluster_ami(self):
         """
-        This method return list of cluster's ami according to cluster tag name
+        This method returns list of cluster's ami according to cluster tag name
         @return:
         """
         images_data = self.ec2_operations.get_images()
@@ -367,7 +362,7 @@ class TagClusterResources(TagClusterOperations):
 
     def cluster_snapshot(self):
         """
-        This method return list of cluster's snapshot according to cluster tag name
+        This method returns list of cluster's snapshot according to cluster tag name
         @return:
         """
         snapshots_data = self.ec2_operations.get_snapshots()
@@ -381,14 +376,14 @@ class TagClusterResources(TagClusterOperations):
 
     def __get_security_group_data(self):
         """
-        This method return security group data
+        This method returns security group data
         @return:
         """
         return self.ec2_operations.get_security_groups()
 
     def cluster_security_group(self):
         """
-        This method return list of cluster's security group according to cluster tag name
+        This method returns list of cluster's security group according to cluster tag name
         @return:
         """
         security_group_ids = self.__generate_cluster_resources_list_by_tag(
@@ -398,7 +393,7 @@ class TagClusterResources(TagClusterOperations):
 
     def cluster_elastic_ip(self):
         """
-        This method return list of cluster's elastic ip according to cluster tag name
+        This method returns list of cluster's elastic ip according to cluster tag name
         @return:
         """
         elastic_ips_data = self.ec2_operations.get_elastic_ips()
@@ -409,7 +404,7 @@ class TagClusterResources(TagClusterOperations):
 
     def cluster_network_interface(self):
         """
-        This method return list of cluster's network interface according to cluster tag name
+        This method returns list of cluster's network interface according to cluster tag name
         @return:
         """
         network_interfaces_data = self.ec2_operations.get_network_interface()
@@ -422,7 +417,7 @@ class TagClusterResources(TagClusterOperations):
 
     def cluster_load_balancer(self):
         """
-        This method return list of cluster's load balancer according to cluster vpc
+        This method returns list of cluster's load balancer according to cluster vpc
         @return:
         """
         result_resources_list = []
@@ -470,7 +465,7 @@ class TagClusterResources(TagClusterOperations):
 
     def cluster_load_balancer_v2(self):
         """
-        This method return list of cluster's load balancer according to cluster vpc
+        This method returns list of cluster's load balancer according to cluster vpc
         @return:
         """
         result_resources_list = []
@@ -518,7 +513,7 @@ class TagClusterResources(TagClusterOperations):
 
     def cluster_vpc(self):
         """
-        This method return list of cluster's vpc according to cluster tag name
+        This method returns list of cluster's vpc according to cluster tag name
         @return:
         """
         vpcs_data = self.ec2_operations.get_vpcs()
@@ -545,7 +540,7 @@ class TagClusterResources(TagClusterOperations):
 
     def cluster_subnet(self):
         """
-        This method return list of cluster's subnet according to cluster tag name
+        This method returns list of cluster's subnet according to cluster tag name
         @return:
         """
         subnets_data = self.ec2_operations.get_subnets()
@@ -556,7 +551,7 @@ class TagClusterResources(TagClusterOperations):
 
     def cluster_route_table(self):
         """
-        This method return list of cluster's route table according to cluster tag name
+        This method returns list of cluster's route table according to cluster tag name
         @return:
         """
         route_tables_data = self.ec2_operations.get_route_tables()
@@ -567,7 +562,7 @@ class TagClusterResources(TagClusterOperations):
 
     def cluster_internet_gateway(self):
         """
-        This method return list of cluster's route table internet gateway according to cluster tag name
+        This method returns list of cluster's route table internet gateway according to cluster tag name
         @return:
         """
         internet_gateways_data = self.ec2_operations.get_internet_gateways()
@@ -579,7 +574,7 @@ class TagClusterResources(TagClusterOperations):
 
     def cluster_dhcp_option(self):
         """
-        This method return list of cluster's dhcp option according to cluster tag name
+        This method returns list of cluster's dhcp option according to cluster tag name
         @return:
         """
         dhcp_options_data = self.ec2_operations.get_dhcp_options()
@@ -590,7 +585,7 @@ class TagClusterResources(TagClusterOperations):
 
     def cluster_vpc_endpoint(self):
         """
-        This method return list of cluster's vpc endpoint according to cluster tag name
+        This method returns list of cluster's vpc endpoint according to cluster tag name
         @return:
         """
         vpc_endpoints_data = self.ec2_operations.get_vpce()
@@ -601,7 +596,7 @@ class TagClusterResources(TagClusterOperations):
 
     def cluster_nat_gateway(self):
         """
-        This method return list of cluster's nat gateway according to cluster tag name
+        This method returns list of cluster's nat gateway according to cluster tag name
         @return:
         """
         nat_gateways_data = self.ec2_operations.get_nat_gateways()
@@ -612,7 +607,7 @@ class TagClusterResources(TagClusterOperations):
 
     def cluster_network_acl(self):
         """
-        This method return list of cluster's network acl according to cluster vpc id
+        This method returns list of cluster's network acl according to cluster vpc id
         Missing OpenShift Tags for it based on VPCs
         @return:
         """
@@ -624,7 +619,7 @@ class TagClusterResources(TagClusterOperations):
 
     def cluster_role(self, cluster_names: list = []):
         """
-        This method return list of cluster's role according to cluster name
+        This method returns list of cluster's role according to cluster name
         @param cluster_names:
         @return:
         """
@@ -674,7 +669,7 @@ class TagClusterResources(TagClusterOperations):
 
     def cluster_user(self, cluster_names: list = []):
         """
-        This method return list of cluster's user according to cluster name
+        This method returns list of cluster's user according to cluster name
         @param cluster_names:
         @return:
         """
@@ -730,13 +725,22 @@ class TagClusterResources(TagClusterOperations):
             for search_tag in search_tags:
                 found = False
                 for tag in tags:
-                    if tag.get('Key') == search_tag.get('Key'):
+                    if tag.get('Key') == search_tag.get('Key') and tag.get('Value') != 'NA':
                         found = True
+                        break
                 if not found:
                     add_tags.append(search_tag)
         else:
             add_tags.extend(search_tags)
-        return add_tags
+        filter_tags = {}
+        for tag in add_tags:
+            key = tag.get('Key')
+            value = tag.get('Value')
+            if key in filter_tags and filter_tags[key].get('Value') == self.NA_VALUE:
+                filter_tags[key] = {'Key': key, 'Value': value}
+            else:
+                filter_tags[key] = {'Key': key, 'Value': value}
+        return list(filter_tags.values())
 
     def __remove_launchTime(self, tags: list):
         """
@@ -748,7 +752,7 @@ class TagClusterResources(TagClusterOperations):
 
     def cluster_s3_bucket(self, cluster_names: list = []):
         """
-        This method return list of cluster's s3 bucket according to cluster name
+        This method returns list of cluster's s3 bucket according to cluster name
         @param cluster_names:
         @return:
         """
