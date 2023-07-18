@@ -32,6 +32,7 @@ class ZombieClusterCommonMethods:
         self.__ldap_host_name = self.__environment_variables_dict.get('LDAP_HOST_NAME', '')
         self._special_user_mails = self.__environment_variables_dict.get('special_user_mails', '{}')
         self._account_admin = self.__environment_variables_dict.get('account_admin', '')
+        self.__email_alert = self.__environment_variables_dict.get('EMAIL_ALERT') if self.__environment_variables_dict.get('EMAIL_ALERT') else False
         self._ldap = LdapSearch(ldap_host_name=self.__ldap_host_name)
         self._mail = Postfix()
         self._mail_description = MailMessage()
@@ -45,7 +46,7 @@ class ZombieClusterCommonMethods:
 
     def get_tag_name_from_tags(self, tags: list, tag_name: str):
         """
-        This method return tag_name from resource_tags
+        This method returns tag_name from resource_tags
         @param tags:
         @param tag_name:
         @return:
@@ -75,7 +76,7 @@ class ZombieClusterCommonMethods:
     def _get_tags_of_zombie_resources(self, resources: list, resource_id_name: str, zombies: dict, aws_service: str,
                                       aws_tag: str = 'Tags'):
         """
-        This method return tags of the resource i.e {resource_id: tags}
+        This method returns tags of the resource i.e {resource_id: tags}
         @param resources:
         @param tags:
         @return:
@@ -177,7 +178,7 @@ class ZombieClusterCommonMethods:
 
     def get_cluster_delete_days(self, tags: list) -> int:
         """
-        This method return the ClusterDeleteDays tag
+        This method returns the ClusterDeleteDays tag
         @param tags:
         @return:
         """
@@ -188,7 +189,6 @@ class ZombieClusterCommonMethods:
             cluster_delete_days = int(cluster_delete_days) + 1
         return cluster_delete_days
 
-    @logger_time_stamp
     def trigger_mail(self, tags: list, resource_id: str, days: int, resources: list, message_type: str):
         """
         This method send triggering mail
@@ -254,7 +254,6 @@ class ZombieClusterCommonMethods:
                     delete_data.setdefault(cluster_tag, []).append({func_name: delete_tag_data[cluster_tag]})
         return notify_data, delete_data, cluster_data
 
-    @logger_time_stamp
     def send_mails_to_cluster_user(self, notify_data: dict, delete_data: dict, cluster_data: dict):
         """
         This method send mail to the user to notify cluster status
@@ -263,17 +262,17 @@ class ZombieClusterCommonMethods:
         @param delete_data:
         @return:
         """
-        for cluster_tag, resource_ids in notify_data.items():
-            self.update_resource_tags(tags=cluster_data[cluster_tag], tag_name='Name', tag_value=cluster_tag)
-            self.trigger_mail(tags=cluster_data[cluster_tag], resource_id=cluster_tag,
-                              days=self.DAYS_TO_TRIGGER_RESOURCE_MAIL,
-                              resources=resource_ids, message_type='notification')
-        for cluster_tag, resource_ids in delete_data.items():
-            self.update_resource_tags(tags=cluster_data[cluster_tag], tag_name='Name', tag_value=cluster_tag)
-            self.trigger_mail(tags=cluster_data[cluster_tag], resource_id=cluster_tag,
-                              days=self.DAYS_TO_DELETE_RESOURCE, resources=resource_ids, message_type='delete')
+        if self.__email_alert:
+            for cluster_tag, resource_ids in notify_data.items():
+                self.update_resource_tags(tags=cluster_data[cluster_tag], tag_name='Name', tag_value=cluster_tag)
+                self.trigger_mail(tags=cluster_data[cluster_tag], resource_id=cluster_tag,
+                                  days=self.DAYS_TO_TRIGGER_RESOURCE_MAIL,
+                                  resources=resource_ids, message_type='notification')
+            for cluster_tag, resource_ids in delete_data.items():
+                self.update_resource_tags(tags=cluster_data[cluster_tag], tag_name='Name', tag_value=cluster_tag)
+                self.trigger_mail(tags=cluster_data[cluster_tag], resource_id=cluster_tag,
+                                  days=self.DAYS_TO_DELETE_RESOURCE, resources=resource_ids, message_type='delete')
 
-    @logger_time_stamp
     def _check_zombie_cluster_deleted_days(self, resources: dict, cluster_left_out_days: dict, zombie: str, cluster_tag: str):
         """
         This method check the cluster delete days and return the clusters

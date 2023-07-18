@@ -1,7 +1,8 @@
-
 from datetime import datetime, timedelta
 import time
 import pandas as pd
+from elasticsearch.helpers import bulk
+
 from cloud_governance.main.environment_variables import environment_variables
 
 from elasticsearch_dsl import Search
@@ -24,12 +25,13 @@ class ElasticSearchOperations:
     # max search results
     MAX_SEARCH_RESULTS = 1000
     MIN_SEARCH_RESULTS = 100
+    DEFAULT_ES_BULK_LIMIT = 5000
 
-    def __init__(self, es_host: str, es_port: str, region: str = '', bucket: str = '', logs_bucket_key: str = '',
+    def __init__(self, es_host: str = None, es_port: str = None, region: str = '', bucket: str = '', logs_bucket_key: str = '',
                  timeout: int = 2000):
         self.__environment_variables_dict = environment_variables.environment_variables_dict
-        self.__es_host = es_host
-        self.__es_port = es_port
+        self.__es_host = es_host if es_host else self.__environment_variables_dict.get('es_host')
+        self.__es_port = es_port if es_port else self.__environment_variables_dict.get('es_port')
         self.__region = region
         self.__timeout = int(self.__environment_variables_dict.get('ES_TIMEOUT')) if self.__environment_variables_dict.get('ES_TIMEOUT') else timeout
         self.__es = Elasticsearch([{'host': self.__es_host, 'port': self.__es_port}], timeout=self.__timeout, max_retries=2)
@@ -111,7 +113,8 @@ class ElasticSearchOperations:
         raise ElasticSearchDataNotUploaded
 
     @typechecked()
-    def upload_to_elasticsearch(self, index: str, data: dict, doc_type: str = '_doc', es_add_items: dict = None, **kwargs):
+    def upload_to_elasticsearch(self, index: str, data: dict, doc_type: str = '_doc', es_add_items: dict = None,
+                                **kwargs):
         """
         This method is upload json data into elasticsearch
         :param index: index name to be stored in elasticsearch
@@ -131,7 +134,7 @@ class ElasticSearchOperations:
         # utcnow - solve timestamp issue
         if not data.get('timestamp'):
             data['timestamp'] = datetime.utcnow()  # datetime.now()
-
+        data['policy'] = self.__environment_variables_dict.get('policy')
         # Upload data to elastic search server
         try:
             if isinstance(data, dict):  # JSON Object
@@ -207,21 +210,41 @@ class ElasticSearchOperations:
         return query
 
     @typechecked()
-    @logger_time_stamp
-    def fetch_data_between_range(self, es_index: str, start_datetime: datetime, end_datetime: datetime):
+    def fetch_data_by_es_query(self, es_index: str, query: dict = None, start_datetime: datetime = None,
+                               end_datetime: datetime = None, result_agg: bool = False, group_by: str = '', search_size: int = 100, limit_to_size: bool = False):
         """
-        This method fetches the data in between range
+        This method fetches the data in between range, if you need aggregation results pass you own query with aggegation
         @param es_index:
         @param start_datetime:
         @param end_datetime:
+        @param query:
+        @param result_agg:
+        @param group_by:
+        @param search_size:
+        @param limit_to_size: limit to size
         @return:
         """
+        es_data = []
         if self.__es.indices.exists(index=es_index):
-            query_body = self.get_query_data_between_range(start_datetime=start_datetime, end_datetime=end_datetime)
-            data = self.__es.search(index=es_index, body=query_body, doc_type='_doc').get('hits')
-            if data:
-                return data['hits']
-        return []
+            if not query:
+                if start_datetime and end_datetime:
+                    query = self.get_query_data_between_range(start_datetime=start_datetime, end_datetime=end_datetime)
+            if query:
+                response = self.__es.search(index=es_index, body=query, doc_type='_doc', size=search_size, scroll='1h')
+                if result_agg:
+                    es_data.extend(response.get('aggregations').get(group_by).get('buckets'))
+                else:
+                    if response.get('hits').get('hits'):
+                        es_data.extend(response.get('hits').get('hits'))
+                    if not limit_to_size:
+                        scroll_id = response.get('_scroll_id')
+                        while scroll_id:
+                            response = self.__es.scroll(scroll_id=scroll_id, scroll="1h")
+                            if len(response.get('hits').get('hits')) > 0:
+                                es_data.extend(response.get('hits').get('hits'))
+                            else:
+                                break
+        return es_data
 
     @typechecked()
     @logger_time_stamp
@@ -262,3 +285,32 @@ class ElasticSearchOperations:
         except Exception as err:
             es_data = {}
         return es_data
+
+    def upload_data_in_bulk(self, data_items: list, index: str, **kwargs):
+        """
+        This method uploads the data using the bulk api
+        :param index:
+        :param data_items:
+        :return:
+        """
+        total_uploaded = 0
+        failed_items = 0
+        for i in range(0, len(data_items), self.DEFAULT_ES_BULK_LIMIT):
+            bulk_items = data_items[i: i + self.DEFAULT_ES_BULK_LIMIT]
+            for item in bulk_items:
+                if kwargs.get('id'):
+                    item['_id'] = item.get(kwargs.get('id'))
+                if not item.get('timestamp'):
+                    item['timestamp'] = datetime.strptime(item.get('CurrentDate'), "%Y-%m-%d")
+                item['_index'] = index
+                item['AccountId'] = str(item.get('AccountId'))
+                item['Policy'] = self.__environment_variables_dict.get('policy')
+            response = bulk(self.__es, bulk_items)
+            if response:
+                total_uploaded += len(bulk_items)
+            else:
+                failed_items += len(bulk_items)
+        if total_uploaded > 0:
+            logger.info(f"✅️ {total_uploaded} is uploaded to the elastic search index: {index}")
+        if failed_items > 0:
+            logger.error(f"❌ {failed_items} is not uploaded to the elasticsearch index: {index}")

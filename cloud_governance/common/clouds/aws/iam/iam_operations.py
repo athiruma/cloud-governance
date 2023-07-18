@@ -7,9 +7,10 @@ from cloud_governance.common.clouds.aws.utils.utils import Utils
 
 class IAMOperations:
 
-    def __init__(self):
-        self.iam_client = boto3.client('iam')
+    def __init__(self, iam_client=None):
+        self.iam_client = iam_client if iam_client else boto3.client('iam')
         self.utils = Utils()
+        self.__sts_client = sts_client = boto3.client('sts')
 
     def get_user_tags(self, username: str):
         """
@@ -45,7 +46,29 @@ class IAMOperations:
         This method returns the aws account alias and cloud name
         @return:
         """
-        account_alias = self.iam_client.list_account_aliases()['AccountAliases']
-        if account_alias:
-            return account_alias[0].upper(), 'AwsCloud'.upper()
-        return os.environ.get('account', '').upper(), 'AwsCloud'.upper()
+        try:
+            account_alias = self.iam_client.list_account_aliases()['AccountAliases']
+            if account_alias:
+                return account_alias[0].upper(), 'AwsCloud'.upper()
+        except:
+            return os.environ.get('account', '').upper(), 'AwsCloud'.upper()
+
+    def get_iam_users_list(self):
+        """
+        This method return the IAM users list
+        :return:
+        """
+        iam_users = []
+        users = self.get_users()
+        for user in users:
+            iam_users.append(user.get('UserName'))
+        return iam_users
+
+    def get_aws_account_id_name(self):
+        """
+        This method returns the aws account_id
+        :return:
+        """
+        response = self.__sts_client.get_caller_identity()
+        account_id = response['Account']
+        return account_id
