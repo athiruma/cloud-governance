@@ -39,6 +39,10 @@ run_policies.sort()
 with open(HAIM_CREDS) as file:
     aws_accounts = json.load(file)
 
+run_policies.remove('ebs_in_use')
+run_policies.remove('ec2_run')
+es_doc_type = '_doc'
+
 cost_tags = ['PurchaseType', 'ChargeType', 'User', 'Budget', 'Project', 'Manager', 'Owner', 'LaunchTime', 'Environment', 'User:Spot']
 cost_metric = 'UnblendedCost'  # UnblendedCost/BlendedCost
 granularity = 'DAILY'  # DAILY/MONTHLY/HOURLY
@@ -51,7 +55,6 @@ for account_name, account_values in aws_accounts.items():
     os.system(f"""podman run --rm --name cloud-governance-daily --net="host" -e account="{account_name}" -e AWS_ACCESS_KEY_ID="{access_id}" -e AWS_SECRET_ACCESS_KEY="{secret_key}"  -e AWS_DEFAULT_REGION="us-east-1"  -e policy="cost_explorer"  -e es_host="{ES_HOST}" -e es_port="{ES_PORT}" -e es_index="{cost_explorer_index}" -it -e cost_explorer_tags="{cost_tags}" -e granularity="{granularity}" -e cost_metric="{cost_metric}" -e policy_output="s3://{bucket}/{LOGS}/us-east-1" -e log_level="INFO" quay.io/ebattat/cloud-governance:latest""")
 
 # run_policies = ['ebs_unattached', 'ip_unattached', 's3_inactive']
-
 os.system(f"""echo Running the cloud_governance policies: {run_policies}""")
 os.system(f"""echo "Running the CloudGovernance policies" """)
 for account_name, account_values in aws_accounts.items():
@@ -64,7 +67,8 @@ for account_name, account_values in aws_accounts.items():
                 os.system(f"""podman run --rm --name cloud-governance-daily --net="host" -e account="{account_name}" -e AWS_ACCESS_KEY_ID="{access_id}" -e AWS_SECRET_ACCESS_KEY="{secret_key}" -e MANAGER_EMAIL_ALERT="False" -e EMAIL_ALERT="False"  -e policy="{policy}" -e AWS_DEFAULT_REGION="{region}" -e dry_run="yes" -e LDAP_HOST_NAME="{LDAP_HOST_NAME}" -e es_host="{ES_HOST}" -e es_port="{ES_PORT}" -e log_level="INFO" -e policy_output="s3://{bucket}/{LOGS}/{region}" quay.io/ebattat/cloud-governance:latest""")
             elif policy not in ('empty_roles', 's3_inactive'):
                 os.system(f"""podman run --rm --name cloud-governance-daily --net="host" -e account="{account_name}" -e AWS_ACCESS_KEY_ID="{access_id}" -e AWS_SECRET_ACCESS_KEY="{secret_key}" -e MANAGER_EMAIL_ALERT="False" -e EMAIL_ALERT="False" -e policy="{policy}" -e AWS_DEFAULT_REGION="{region}" -e dry_run="yes" -e LDAP_HOST_NAME="{LDAP_HOST_NAME}" -e es_host="{ES_HOST}" -e es_port="{ES_PORT}" -e log_level="INFO" -e policy_output="s3://{bucket}/{LOGS}/{region}" quay.io/ebattat/cloud-governance:latest""")
-
+            if policy in ['zombie_cluster_resource'] and region == 'us-east-1':
+                os.system(f"""podman run --rm --name cloud-governance-daily -e upload_data_es="upload_data_es" -e account="{account_name}" -e es_host="{ES_HOST}" -e es_port="{ES_PORT}" -e es_doc_type="{es_doc_type}" -e bucket="{bucket}" -e policy="{policy}" -e AWS_DEFAULT_REGION="{region}" -e AWS_ACCESS_KEY_ID="{access_id}" -e AWS_SECRET_ACCESS_KEY="{secret_key}" -e log_level="INFO" quay.io/ebattat/cloud-governance:latest""")
 
 os.system(f"""echo "Running the tag_iam_user" """)
 for account_name, account_values in aws_accounts.items():
