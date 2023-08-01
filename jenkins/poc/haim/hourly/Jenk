@@ -1,0 +1,71 @@
+pipeline {
+
+    agent {
+        label 'haim-cloud-governance-worker'
+    }
+
+    stages {
+        stage('BuildAndTest') {
+            matrix {
+                agent {
+                    docker {
+                        label 'haim-cloud-governance-worker'
+                        image 'quay.io/athiru/centos-stream8-podman:latest'
+                        args  '--net="host" -u root -v /etc/postfix/main.cf:/etc/postfix/main.cf --privileged'
+                    }
+                }
+                environment {
+                    AWS_IAM_USER_SPREADSHEET_ID = credentials('cloud-governance-aws-iam-user-spreadsheet-id')
+                    GOOGLE_APPLICATION_CREDENTIALS = credentials('cloud-governance-google-application-credentials')
+                    LDAP_HOST_NAME = credentials('redhat-ldap-hostname')
+                    contact2 = "athiruma@redhat.com"
+                }
+                axes {
+                    axis {
+                        name 'AWS_ACCOUNT'
+                        values 'appeng', 'coreos-training'
+                    }
+                }
+                stages {
+                    stage('Checkout') { // Checkout (git clone ...) the projects repository
+                       steps {
+                             checkout scm
+                       }
+                    }
+                    stage('Initial Cleanup') {
+                        steps {
+                             sh '''if [[ "$(podman images -q quay.io/ebattat/cloud-governance 2> /dev/null)" != "" ]]; then podman rmi -f $(podman images -q quay.io/ebattat/cloud-governance 2> /dev/null); fi'''
+                        }
+                    }
+                    stage('Run Tagging Cluster & Non-Cluster') {
+                        environment{
+                            access_id = credentials("${AWS_ACCOUNT}-aws-access-key-id")
+                            secret_key = credentials("${AWS_ACCOUNT}-aws-secret-key-id")
+                            bucket = credentials("${AWS_ACCOUNT}-s3-bucket")
+                            account_name = "${AWS_ACCOUNT}"
+                        }
+                        steps {
+                            sh 'python3 jenkins/poc/haim/hourly/run_policies.py'
+                        }
+                    }
+                    stage('Finalize Cleanup') {
+                        steps {
+                             sh '''if [[ "$(podman images -q quay.io/ebattat/cloud-governance 2> /dev/null)" != "" ]]; then podman rmi -f $(podman images -q quay.io/ebattat/cloud-governance 2> /dev/null); fi'''
+                             deleteDir()
+                        }
+                    }
+                }
+            }
+        }
+    }
+    post {
+        failure {
+              script {
+                msg = "Build error for ${env.JOB_NAME} ${env.BUILD_NUMBER} (${env.BUILD_URL})"
+                emailext body: """\
+            Jenkins job: ${env.BUILD_URL}\nSee the console output for more details:  ${env.BUILD_URL}consoleFull\n\n
+            """,subject: msg, to: "${contact2}, ${contact2}, ${contact2}"
+            }
+          }
+    }
+}
