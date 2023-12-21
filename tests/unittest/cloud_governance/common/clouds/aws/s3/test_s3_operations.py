@@ -9,9 +9,8 @@ from cloud_governance.common.clouds.aws.s3.s3_operations import S3Operations
 # walk around for moto DeprecationWarning
 import warnings
 
-from cloud_governance.main.aws_main_operations import AWSMainOperations
+from cloud_governance.main.main_oerations.aws_main_operations import AWSMainOperations
 from cloud_governance.main.environment_variables import environment_variables
-from cloud_governance.policy.aws.cleanup.ec2_run import EC2Run
 
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", category=DeprecationWarning)

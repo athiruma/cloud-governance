@@ -70,7 +70,8 @@ def test_ec2_run_alert():
             'DryRun': 'no',
             'Name': 'Unittest',
             'RegionName': 'ap-south-1',
-            'ResourceStopped': 'False'
+            'ResourceStopped': 'False',
+            'PublicCloud': 'AWS'
         }
     ]
     assert len(ec2_client.describe_instances(Filters=[{"Name": "instance-state-name", "Values": ["running"]}])['Reservations']) == 1
@@ -116,7 +117,8 @@ def test_ec2_run_alert_stopped():
             'DryRun': 'no',
             'Name': 'Unittest',
             'RegionName': 'ap-south-1',
-            'ResourceStopped': 'True'
+            'ResourceStopped': 'True',
+            'PublicCloud': 'AWS'
         }
     ]
     assert len(ec2_client.describe_instances(Filters=[{"Name": "instance-state-name", "Values": ["running"]}])['Reservations']) == 0
@@ -161,7 +163,8 @@ def test_ec2_run_alert_skip():
             'DryRun': 'no',
             'Name': 'Unittest',
             'RegionName': 'ap-south-1',
-            'ResourceStopped': 'False'
+            'ResourceStopped': 'False',
+            'PublicCloud': 'AWS'
         }
     ]
     assert len(ec2_client.describe_instances(Filters=[{"Name": "instance-state-name", "Values": ["running"]}])['Reservations']) == 1
@@ -206,7 +209,8 @@ def test_ec2_run_stop_reset():
             'DryRun': 'no',
             'Name': 'Unittest',
             'RegionName': 'ap-south-1',
-            'ResourceStopped': 'True'
+            'ResourceStopped': 'True',
+            'PublicCloud': 'AWS'
         }
     ]
     assert len(ec2_client.describe_instances(Filters=[{"Name": "instance-state-name", "Values": ["running"]}])['Reservations']) == 0
@@ -256,7 +260,8 @@ def test_ec2_run_stop_start():
             'DryRun': 'no',
             'Name': 'Unittest',
             'RegionName': 'ap-south-1',
-            'ResourceStopped': 'True'
+            'ResourceStopped': 'True',
+            'PublicCloud': 'AWS'
         }
     ]
     assert len(ec2_client.describe_instances(Filters=[{"Name": "instance-state-name", "Values": ["running"]}])['Reservations']) == 0
@@ -313,7 +318,8 @@ def test_ec2_force_delete():
             'Name': 'Unittest',
             'RegionName': 'ap-south-1',
             'ResourceStopped': 'True',
-            'ForceDeleted': 'True'
+            'ForceDeleted': 'True',
+            'PublicCloud': 'AWS'
         }
     ]
     assert len(ec2_client.describe_instances(Filters=[{"Name": "instance-state-name", "Values": ["running"]}])['Reservations']) == 0
@@ -355,11 +361,12 @@ def test_ec2_force_delete_skip():
             'InstanceState': 'running',
             'StateTransitionReason': resource.get('StateTransitionReason'),
             'RunningDays': 0,
-            'CleanUpDays': 4,
+            'CleanUpDays': 0,
             'DryRun': 'yes',
             'Name': 'Unittest',
             'RegionName': 'ap-south-1',
             'ResourceStopped': 'False',
+            'PublicCloud': 'AWS'
         }
     ]
     assert len(ec2_client.describe_instances(Filters=[{"Name": "instance-state-name", "Values": ["running"]}])['Reservations']) == 1

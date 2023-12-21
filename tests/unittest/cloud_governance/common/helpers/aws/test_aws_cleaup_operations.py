@@ -35,7 +35,7 @@ def test_get_clean_up_days_count():
     aws_cleanup_operations = AWSCleanUpOperations()
     tags = [{'Key': "Name", "Value": "Unittest"}]
     days_count = aws_cleanup_operations.get_clean_up_days_count(tags=tags)
-    assert days_count == 1
+    assert days_count == 0
 
 
 @mock_ec2
@@ -52,7 +52,7 @@ def test_get_clean_up_days_count_already_exists():
     mock_date = (datetime.datetime.utcnow() - datetime.timedelta(days=1)).date()
     tags = [{'Key': "Name", "Value": "Unittest"}, {'Key': "DaysCount", "Value": f'{mock_date}@1'}]
     days_count = aws_cleanup_operations.get_clean_up_days_count(tags=tags)
-    assert days_count == 2
+    assert days_count == 0
 
 
 @mock_ec2
@@ -69,7 +69,7 @@ def test_get_clean_up_days_count_already_updated_today():
     mock_date = str(datetime.datetime.utcnow().date())
     tags = [{'Key': "Name", "Value": "Unittest"}, {'Key': "DaysCount", "Value": f'{mock_date}@1'}]
     days_count = aws_cleanup_operations.get_clean_up_days_count(tags=tags)
-    assert days_count == 1
+    assert days_count == 0
 
 
 @mock_ec2

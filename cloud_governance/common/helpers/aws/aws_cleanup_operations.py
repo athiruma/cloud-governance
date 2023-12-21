@@ -1,8 +1,9 @@
-import datetime
 
 import boto3
 
+from cloud_governance.common.clouds.aws.ec2.ec2_operations import EC2Operations
 from cloud_governance.common.clouds.aws.s3.s3_operations import S3Operations
+from cloud_governance.common.elasticsearch.elastic_upload import ElasticUpload
 from cloud_governance.common.helpers.cleanup_operations import AbstractCleanUpOperations
 from cloud_governance.common.logger.init_logger import logger
 
@@ -12,8 +13,11 @@ class AWSCleanUpOperations(AbstractCleanUpOperations):
     def __init__(self):
         super().__init__()
         self._region = self._environment_variables_dict.get('AWS_DEFAULT_REGION', 'us-east-2')
+        self._cloud_name = 'AWS'
         self.__s3operations = S3Operations(region_name=self._region)
         self._ec2_client = boto3.client('ec2', region_name=self._region)
+        self._ec2_operations = EC2Operations(region=self._region)
+        self._es_upload = ElasticUpload()
         self._s3_client = boto3.client('s3')
         self._iam_client = boto3.client('iam')
 
@@ -32,23 +36,6 @@ class AWSCleanUpOperations(AbstractCleanUpOperations):
                 if tag.get('Key').strip().lower() == tag_name.lower():
                     return tag.get('Value').strip()
         return ''
-
-    def get_clean_up_days_count(self, tags: list):
-        """
-        This method returns the cleanup days count
-        :param tags:
-        :type tags:
-        :return:
-        :rtype:
-        """
-        last_used_day = self.get_tag_name_from_tags(tags=tags, tag_name='DaysCount')
-        if not last_used_day:
-            return 1
-        else:
-            date, days = last_used_day.split('@')
-            if date != str(self.CURRENT_DATE):
-                return int(days) + 1
-            return 1 if int(days) == 0 else int(days)
 
     def _delete_resource(self, resource_id: str):
         """
@@ -93,9 +80,9 @@ class AWSCleanUpOperations(AbstractCleanUpOperations):
                 custom_tags.append(tag)
         return custom_tags
 
-    def __update_tag_value(self, tags: list, tag_name: str, tag_value: str):
+    def _update_tag_value(self, tags: list, tag_name: str, tag_value: str):
         """
-        This method updates the tag_value
+        This method returns the updated tag_list by adding the tag_name and tag_value to the tags
         @param tags:
         @param tag_name:
         @param tag_value:
@@ -133,7 +120,7 @@ class AWSCleanUpOperations(AbstractCleanUpOperations):
         :return:
         :rtype:
         """
-        tags = self.__update_tag_value(tags=tags, tag_name='DaysCount', tag_value=str(cleanup_days))
+        tags = self._update_tag_value(tags=tags, tag_name='DaysCount', tag_value=str(cleanup_days))
         try:
             if self._policy == 's3_inactive':
                 self._s3_client.put_bucket_tagging(Bucket=resource_id, Tagging={'TagSet': tags})

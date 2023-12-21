@@ -1,10 +1,10 @@
 import datetime
 
-from cloud_governance.policy.policy_operations.aws.zombie_non_cluster.run_zombie_non_cluster_policies import \
-    NonClusterZombiePolicy
+
+from cloud_governance.common.helpers.aws.aws_cleanup_operations import AWSCleanUpOperations
 
 
-class EC2Run(NonClusterZombiePolicy):
+class EC2Run(AWSCleanUpOperations):
 
     RESOURCE_ACTION = "Stopped"
 
@@ -31,8 +31,8 @@ class EC2Run(NonClusterZombiePolicy):
                 'instance_count': value,
                 'timestamp': datetime.datetime.utcnow(),
                 'region': self._region,
-                'account': self._account.upper().replace('OPENSHIFT-', ''),
-                'index_id': f'{key}-{self._account.lower()}-{self._region}-{str(datetime.datetime.utcnow().date())}'
+                'account': self.account.upper().replace('OPENSHIFT-', ''),
+                'index_id': f'{key}-{self.account.lower()}-{self._region}-{str(datetime.datetime.utcnow().date())}'
             })
         self._es_upload.es_upload_data(items=es_instance_types_data, es_index=self.__es_index, set_index='index_id')
 
@@ -48,15 +48,15 @@ class EC2Run(NonClusterZombiePolicy):
         for instance in instances:
             tags = instance.get('Tags', [])
             if instance.get('State', {}).get('Name') == 'running':
-                running_days = self._calculate_days(instance.get('LaunchTime'))
-                cleanup_days = self._aws_cleanup_policies.get_clean_up_days_count(tags=tags)
-                cleanup_result = self._aws_cleanup_policies.verify_and_delete_resource(
+                running_days = self.calculate_days(instance.get('LaunchTime'))
+                cleanup_days = self.get_clean_up_days_count(tags=tags)
+                cleanup_result = self.verify_and_delete_resource(
                     resource_id=instance.get('InstanceId'), tags=tags,
                     clean_up_days=cleanup_days)
                 resource_data = {
                         'ResourceId': instance.get('InstanceId'),
-                        'User': self._get_tag_name_from_tags(tags=tags, tag_name='User'),
-                        'SkipPolicy': self._aws_cleanup_policies.get_skip_policy_value(tags=tags),
+                        'User': self.get_tag_name_from_tags(tags=tags, tag_name='User'),
+                        'SkipPolicy': self.get_skip_policy_value(tags=tags),
                         'LaunchTime': instance['LaunchTime'].strftime("%Y-%m-%dT%H:%M:%S+00:00"),
                         'InstanceType': instance.get('InstanceType'),
                         'InstanceState': instance.get('State', {}).get('Name') if not cleanup_result else 'stopped',
@@ -64,17 +64,18 @@ class EC2Run(NonClusterZombiePolicy):
                         'RunningDays': running_days,
                         'CleanUpDays': cleanup_days,
                         'DryRun': self._dry_run,
-                        'Name': self._get_tag_name_from_tags(tags=tags, tag_name='Name'),
+                        'Name': self.get_tag_name_from_tags(tags=tags, tag_name='Name'),
                         'RegionName': self._region,
-                        f'Resource{self.RESOURCE_ACTION}': str(cleanup_result)
+                        f'Resource{self.RESOURCE_ACTION}': str(cleanup_result),
+                        'PublicCloud': self._cloud_name
                 }
                 if self._force_delete and self._dry_run == 'no':
                     resource_data.update({'ForceDeleted': str(self._force_delete)})
                 running_instances_data.append(resource_data)
             else:
                 cleanup_days = 0
-            self._aws_cleanup_policies.update_resource_day_count_tag(resource_id=instance.get('InstanceId'),
-                                                                     cleanup_days=cleanup_days, tags=tags)
+            self.update_resource_day_count_tag(resource_id=instance.get('InstanceId'), cleanup_days=cleanup_days,
+                                               tags=tags)
 
         return running_instances_data
 
