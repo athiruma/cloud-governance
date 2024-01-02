@@ -1,4 +1,4 @@
-from cloud_governance.common.logger.init_logger import logger
+from cloud_governance.common import logger
 from cloud_governance.policy.policy_operations.aws.tag_non_cluster.remove_non_cluster_tags import RemoveNonClusterTags
 from cloud_governance.policy.policy_operations.aws.tag_non_cluster.tag_non_cluster_resources import TagNonClusterResources
 from cloud_governance.policy.policy_operations.aws.tag_non_cluster.update_na_tag_resources import UpdateNATags

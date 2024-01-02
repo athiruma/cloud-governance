@@ -2,12 +2,10 @@ import datetime
 
 from dateutil.relativedelta import relativedelta
 
-from cloud_governance.common.logger.logger_time_stamp import logger_time_stamp
+from cloud_governance.common import UploadToGsheet
 
-from cloud_governance.common.google_drive.upload_to_gsheet import UploadToGsheet
-
-from cloud_governance.common.clouds.ibm.account.ibm_account import IBMAccount
-from cloud_governance.common.elasticsearch.elastic_upload import ElasticUpload
+from cloud_governance.common import IBMAccount
+from cloud_governance.common import ElasticUpload
 from cloud_governance.main.environment_variables import environment_variables
 
 

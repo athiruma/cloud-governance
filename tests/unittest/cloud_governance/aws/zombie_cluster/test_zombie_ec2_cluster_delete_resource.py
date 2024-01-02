@@ -2,7 +2,7 @@ import boto3
 import pytest
 from moto import mock_ec2, mock_elb, mock_elbv2, mock_s3
 from cloud_governance.policy.aws.zombie_cluster_resource import ZombieClusterResources
-from cloud_governance.common.clouds.aws.ec2.ec2_operations import EC2Operations
+from cloud_governance.common import EC2Operations
 
 tags = [
     {'Key': 'kubernetes.io/cluster/unittest-test-cluster', 'Value': 'Owned'},

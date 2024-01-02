@@ -1,4 +1,4 @@
-from cloud_governance.common.logger.init_logger import logger
+from cloud_governance.common import logger
 from cloud_governance.policy.policy_operations.aws.tag_cluster.remove_cluster_tags import RemoveClusterTags
 from cloud_governance.policy.policy_operations.aws.tag_cluster.tag_cluster_resouces import TagClusterResources
 

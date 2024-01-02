@@ -4,9 +4,9 @@ import boto3
 import typeguard
 from botocore.client import BaseClient
 
-from cloud_governance.common.clouds.aws.ec2.ec2_operations import EC2Operations
-from cloud_governance.common.clouds.aws.utils.utils import Utils
-from cloud_governance.common.logger.init_logger import logger
+from cloud_governance.common import EC2Operations
+from cloud_governance.common import Utils
+from cloud_governance.common import logger
 
 
 class DeleteEC2Resources:

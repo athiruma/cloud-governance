@@ -2,7 +2,7 @@ from functools import wraps
 import datetime
 import time
 
-from cloud_governance.common.logger.init_logger import logger
+from cloud_governance.common import logger
 
 datetime_format = '%Y-%m-%d %H:%M:%S'
 

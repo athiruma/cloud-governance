@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 from ldap.ldapobject import SimpleLDAPObject
 
-from cloud_governance.common.ldap.ldap_search import LdapSearch
+from cloud_governance.common import LdapSearch
 
 
 def mock_search_s(cls, base, scope, filterstr=None, attrlist=None):

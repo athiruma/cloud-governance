@@ -4,7 +4,7 @@ import os.path
 from abc import abstractmethod, ABC
 from typing import Union, Callable
 
-from cloud_governance.common.logger.init_logger import logger
+from cloud_governance.common import logger
 from cloud_governance.main.environment_variables import environment_variables
 from cloud_governance.policy.policy_runners.elasticsearch.upload_elastic_search import UploadElasticSearch
 

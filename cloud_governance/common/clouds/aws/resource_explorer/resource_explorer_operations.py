@@ -1,6 +1,6 @@
 import boto3
 
-from cloud_governance.common.logger.init_logger import logger
+from cloud_governance.common import logger
 
 # @Todo, This class will be used in the feature releases.
 # @Todo, it helps in find the resource data like tags by using search query

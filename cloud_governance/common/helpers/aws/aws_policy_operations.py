@@ -1,10 +1,10 @@
 
 import boto3
 
-from cloud_governance.common.clouds.aws.ec2.ec2_operations import EC2Operations
-from cloud_governance.common.clouds.aws.s3.s3_operations import S3Operations
-from cloud_governance.common.helpers.abstract_policy_operations import AbstractPolicyOperations
-from cloud_governance.common.logger.init_logger import logger
+from cloud_governance.common import EC2Operations
+from cloud_governance.common import S3Operations
+from cloud_governance.common import AbstractPolicyOperations
+from cloud_governance.common import logger
 
 
 class AWSPolicyOperations(AbstractPolicyOperations):

@@ -2,7 +2,7 @@ import datetime
 
 import pytest
 
-from cloud_governance.common.clouds.azure.cost_management.cost_management_operations import CostManagementOperations
+from cloud_governance.common import CostManagementOperations
 
 
 def test_get_usage():

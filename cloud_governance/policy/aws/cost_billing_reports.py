@@ -5,13 +5,13 @@ from operator import sub, add
 
 import pandas as pd
 
-from cloud_governance.common.clouds.aws.cost_explorer.cost_explorer_operations import CostExplorerOperations
-from cloud_governance.common.clouds.aws.iam.iam_operations import IAMOperations
-from cloud_governance.common.clouds.aws.sts.sts_oprations import STSOperations
-from cloud_governance.common.elasticsearch.elastic_upload import ElasticUpload
-from cloud_governance.common.google_drive.google_drive_operations import GoogleDriveOperations
+from cloud_governance.common import CostExplorerOperations
+from cloud_governance.common import IAMOperations
+from cloud_governance.common import STSOperations
+from cloud_governance.common import ElasticUpload
+from cloud_governance.common import GoogleDriveOperations
 from cloud_governance.main.environment_variables import environment_variables
-from cloud_governance.common.google_drive.upload_to_gsheet import UploadToGsheet
+from cloud_governance.common import UploadToGsheet
 
 
 class CostBillingReports:

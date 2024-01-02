@@ -1,7 +1,7 @@
 import boto3
 from moto import mock_ec2
 
-from cloud_governance.common.clouds.aws.ec2.ec2_operations import EC2Operations
+from cloud_governance.common import EC2Operations
 
 AWS_DEFAULT_REGION = 'ap-south-1'
 

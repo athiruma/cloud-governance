@@ -1,5 +1,5 @@
 
-from cloud_governance.common.utils.utils import Utils
+from cloud_governance.common import Utils
 from cloud_governance.main.environment_variables import environment_variables
 from cloud_governance.policy.policy_runners.azure.policy_runner import PolicyRunner as AzurePolicyRunner
 from cloud_governance.policy.policy_runners.aws.policy_runner import PolicyRunner as AWSPolicyRunner

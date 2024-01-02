@@ -1,8 +1,8 @@
 from retry import retry
 from typeguard import typechecked
 
-from cloud_governance.common.clouds.ibm.account.ibm_account import IBMAccount
-from cloud_governance.common.logger.logger_time_stamp import logger_time_stamp
+from cloud_governance.common import IBMAccount
+from cloud_governance.common import logger_time_stamp
 
 
 class ClassicOperations:

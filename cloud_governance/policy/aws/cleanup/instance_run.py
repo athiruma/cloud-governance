@@ -1,6 +1,6 @@
 import datetime
 
-from cloud_governance.common.helpers.aws.aws_policy_operations import AWSPolicyOperations
+from cloud_governance.common import AWSPolicyOperations
 from cloud_governance.policy.abstract_policies.cleanup.abstractinstance_run import AbstractInstanceRun
 
 

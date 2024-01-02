@@ -4,8 +4,8 @@ from operator import itemgetter
 
 import pandas
 
-from cloud_governance.common.elasticsearch.elastic_upload import ElasticUpload
-from cloud_governance.common.ldap.ldap_search import LdapSearch
+from cloud_governance.common import ElasticUpload
+from cloud_governance.common import LdapSearch
 from cloud_governance.main.environment_variables import environment_variables
 
 

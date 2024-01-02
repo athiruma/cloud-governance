@@ -3,7 +3,7 @@ from functools import wraps
 from unittest.mock import patch
 
 
-from cloud_governance.common.jira.jira_operations import JiraOperations
+from cloud_governance.common import JiraOperations
 
 
 def get_ticket_response():

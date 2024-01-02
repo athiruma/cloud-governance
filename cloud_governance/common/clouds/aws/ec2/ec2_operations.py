@@ -4,8 +4,8 @@ import boto3
 import typeguard
 from typing import Callable
 
-from cloud_governance.common.clouds.aws.utils.utils import Utils
-from cloud_governance.common.logger.logger_time_stamp import logger_time_stamp
+from cloud_governance.common import Utils
+from cloud_governance.common import logger_time_stamp
 from cloud_governance.main.environment_variables import environment_variables
 
 

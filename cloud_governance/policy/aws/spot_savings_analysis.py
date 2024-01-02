@@ -3,10 +3,10 @@ from datetime import datetime
 
 import typeguard
 
-from cloud_governance.common.clouds.aws.athena.pyathena_operations import PyAthenaOperations
-from cloud_governance.common.elasticsearch.elasticsearch_operations import ElasticSearchOperations
-from cloud_governance.common.logger.init_logger import logger
-from cloud_governance.common.logger.logger_time_stamp import logger_time_stamp
+from cloud_governance.common import PyAthenaOperations
+from cloud_governance.common import ElasticSearchOperations
+from cloud_governance.common import logger
+from cloud_governance.common import logger_time_stamp
 from cloud_governance.main.environment_variables import environment_variables
 
 

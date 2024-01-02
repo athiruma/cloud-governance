@@ -3,9 +3,9 @@ import datetime
 import pandas
 from typeguard import typechecked
 
-from cloud_governance.common.clouds.ibm.account.ibm_account import IBMAccount
-from cloud_governance.common.clouds.ibm.classic.classic_operations import ClassicOperations
-from cloud_governance.common.elasticsearch.elastic_upload import ElasticUpload
+from cloud_governance.common import IBMAccount
+from cloud_governance.common import ClassicOperations
+from cloud_governance.common import ElasticUpload
 from cloud_governance.main.environment_variables import environment_variables
 
 

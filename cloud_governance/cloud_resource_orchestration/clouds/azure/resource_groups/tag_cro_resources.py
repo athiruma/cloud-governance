@@ -1,8 +1,8 @@
 from cloud_governance.cloud_resource_orchestration.clouds.azure.resource_groups.abstract_resource import \
     AbstractResource
 from cloud_governance.cloud_resource_orchestration.utils.common_operations import get_ldap_user_data
-from cloud_governance.common.jira.jira_operations import JiraOperations
-from cloud_governance.common.logger.init_logger import logger
+from cloud_governance.common import JiraOperations
+from cloud_governance.common import logger
 
 
 class TagCROResources(AbstractResource):

@@ -7,14 +7,14 @@ import typeguard
 
 from cloud_governance.cloud_resource_orchestration.utils.constant_variables import DATE_FORMAT
 from cloud_governance.cloud_resource_orchestration.utils.elastic_search_queries import ElasticSearchQueries
-from cloud_governance.common.clouds.aws.cost_explorer.cost_explorer_operations import CostExplorerOperations
-from cloud_governance.common.clouds.aws.ec2.ec2_operations import EC2Operations
-from cloud_governance.common.elasticsearch.elasticsearch_operations import ElasticSearchOperations
-from cloud_governance.common.ldap.ldap_search import LdapSearch
-from cloud_governance.common.logger.init_logger import logger, handler
-from cloud_governance.common.logger.logger_time_stamp import logger_time_stamp
-from cloud_governance.common.mails.mail_message import MailMessage
-from cloud_governance.common.mails.postfix import Postfix
+from cloud_governance.common import CostExplorerOperations
+from cloud_governance.common import EC2Operations
+from cloud_governance.common import ElasticSearchOperations
+from cloud_governance.common import LdapSearch
+from cloud_governance.common import logger, handler
+from cloud_governance.common import logger_time_stamp
+from cloud_governance.common import MailMessage
+from cloud_governance.common import Postfix
 from cloud_governance.main.environment_variables import environment_variables
 
 

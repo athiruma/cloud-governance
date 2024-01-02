@@ -1,8 +1,8 @@
 import importlib
 import inspect
 
-from cloud_governance.common.logger.init_logger import logger
-from cloud_governance.common.logger.logger_time_stamp import logger_time_stamp
+from cloud_governance.common import logger
+from cloud_governance.common import logger_time_stamp
 from cloud_governance.policy.policy_operations.ibm.ibm_operations.ibm_operations import IBMOperations
 
 

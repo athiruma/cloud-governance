@@ -3,7 +3,7 @@ import json
 from moto import mock_iam, mock_ec2
 import boto3
 
-from cloud_governance.common.clouds.aws.utils.utils import Utils
+from cloud_governance.common import Utils
 from cloud_governance.policy.aws.zombie_cluster_resource import ZombieClusterResources
 
 

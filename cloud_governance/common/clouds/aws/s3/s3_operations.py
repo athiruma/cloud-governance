@@ -9,7 +9,7 @@ from botocore.exceptions import ClientError
 from os import listdir
 from os.path import isfile, join
 
-from cloud_governance.common.logger.logger_time_stamp import logger_time_stamp
+from cloud_governance.common import logger_time_stamp
 
 
 class S3Operations:

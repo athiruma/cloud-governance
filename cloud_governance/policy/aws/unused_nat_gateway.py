@@ -1,7 +1,7 @@
 import datetime
 
 
-from cloud_governance.common.clouds.aws.cloudwatch.cloudwatch_operations import CloudWatchOperations
+from cloud_governance.common import CloudWatchOperations
 from cloud_governance.policy.policy_operations.aws.zombie_non_cluster.run_zombie_non_cluster_policies import NonClusterZombiePolicy
 
 

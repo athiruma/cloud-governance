@@ -52,7 +52,7 @@ def get_ldap_user_data(user: str, tag_name: str):
     :param tag_name:
     :return:
     """
-    from cloud_governance.common.ldap.ldap_search import LdapSearch
+    from cloud_governance.common import LdapSearch
     ldap_search = LdapSearch(ldap_host_name=environment_variables.environment_variables_dict.get('LDAP_HOST_NAME', ''))
     user_details = ldap_search.get_user_details(user)
     if user_details:

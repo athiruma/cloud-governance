@@ -4,8 +4,8 @@ import tempfile
 import numpy as np
 import pandas as pd
 
-from cloud_governance.common.google_drive.google_drive_operations import GoogleDriveOperations
-from cloud_governance.common.logger.logger_time_stamp import logger_time_stamp
+from cloud_governance.common import GoogleDriveOperations
+from cloud_governance.common import logger_time_stamp
 from cloud_governance.main.environment_variables import environment_variables
 
 

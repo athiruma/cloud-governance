@@ -3,13 +3,13 @@ import datetime
 import pytz
 from azure.mgmt.costmanagement.models import QueryGrouping, QueryFilter, QueryComparisonExpression
 
-from cloud_governance.common.clouds.azure.cost_management.cost_management_operations import CostManagementOperations
-from cloud_governance.common.clouds.azure.subscriptions.azure_operations import AzureOperations
-from cloud_governance.common.elasticsearch.elastic_upload import ElasticUpload
-from cloud_governance.common.google_drive.google_drive_operations import GoogleDriveOperations
-from cloud_governance.common.google_drive.upload_to_gsheet import UploadToGsheet
-from cloud_governance.common.logger.init_logger import logger
-from cloud_governance.common.logger.logger_time_stamp import logger_time_stamp
+from cloud_governance.common import CostManagementOperations
+from cloud_governance.common import AzureOperations
+from cloud_governance.common import ElasticUpload
+from cloud_governance.common import GoogleDriveOperations
+from cloud_governance.common import UploadToGsheet
+from cloud_governance.common import logger
+from cloud_governance.common import logger_time_stamp
 from cloud_governance.main.environment_variables import environment_variables
 
 

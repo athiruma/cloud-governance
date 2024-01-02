@@ -2,10 +2,10 @@ import json
 from datetime import datetime
 import pandas as pd
 
-from cloud_governance.common.elasticsearch.elasticsearch_operations import ElasticSearchOperations
-from cloud_governance.common.logger.logger_time_stamp import logger_time_stamp
-from cloud_governance.common.clouds.aws.s3.s3_operations import S3Operations
-from cloud_governance.common.clouds.aws.price.price import AWSPrice
+from cloud_governance.common import ElasticSearchOperations
+from cloud_governance.common import logger_time_stamp
+from cloud_governance.common import S3Operations
+from cloud_governance.common import AWSPrice
 
 
 class ESUploader:

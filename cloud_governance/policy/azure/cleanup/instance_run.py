@@ -1,4 +1,4 @@
-from cloud_governance.common.helpers.azure.azure_policy_operations import AzurePolicyOperations
+from cloud_governance.common import AzurePolicyOperations
 from cloud_governance.policy.abstract_policies.cleanup.abstractinstance_run import AbstractInstanceRun
 
 

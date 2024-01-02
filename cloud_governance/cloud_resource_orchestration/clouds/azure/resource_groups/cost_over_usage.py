@@ -3,8 +3,8 @@ from datetime import datetime
 
 from cloud_governance.cloud_resource_orchestration.clouds.common.abstract_cost_over_usage import AbstractCostOverUsage
 from cloud_governance.cloud_resource_orchestration.utils.common_operations import string_equal_ignore_case
-from cloud_governance.common.clouds.azure.compute.compute_operations import ComputeOperations
-from cloud_governance.common.clouds.azure.cost_management.cost_management_operations import CostManagementOperations
+from cloud_governance.common import ComputeOperations
+from cloud_governance.common import CostManagementOperations
 
 
 class CostOverUsage(AbstractCostOverUsage, ABC):

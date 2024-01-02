@@ -1,6 +1,6 @@
 import typeguard
 
-from cloud_governance.common.logger.init_logger import logger
+from cloud_governance.common import logger
 
 
 class DeleteS3Resources:

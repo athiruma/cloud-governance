@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from cloud_governance.common.clouds.aws.support.support_operations import SupportOperations
+from cloud_governance.common import SupportOperations
 
 
 @patch('boto3.client')

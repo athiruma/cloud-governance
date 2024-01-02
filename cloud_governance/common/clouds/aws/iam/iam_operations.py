@@ -2,7 +2,7 @@ import os
 
 import boto3
 
-from cloud_governance.common.clouds.aws.utils.utils import Utils
+from cloud_governance.common import Utils
 
 
 class IAMOperations:

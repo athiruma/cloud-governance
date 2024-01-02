@@ -1,7 +1,7 @@
 import boto3
 from moto import mock_ec2
 
-from cloud_governance.common.clouds.aws.utils.utils import Utils
+from cloud_governance.common import Utils
 
 
 @mock_ec2
@@ -22,6 +22,6 @@ def test_tag_aws_resources():
 
 
 def test_get_cloud_policies():
-    from cloud_governance.common.utils.utils import Utils
+    from cloud_governance.common import Utils
     policies = Utils.get_cloud_policies(cloud_name='AWS', dir_dict=True)
     assert 'instance_run' in policies['cleanup']

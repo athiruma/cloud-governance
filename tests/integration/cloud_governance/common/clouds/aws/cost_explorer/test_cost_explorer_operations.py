@@ -1,6 +1,6 @@
 import datetime
 
-from cloud_governance.common.clouds.aws.cost_explorer.cost_explorer_operations import CostExplorerOperations
+from cloud_governance.common import CostExplorerOperations
 
 
 def test_get_cost_and_usage_from_aws():

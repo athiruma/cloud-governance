@@ -1,6 +1,6 @@
 import datetime
 
-from cloud_governance.common.elasticsearch.elasticsearch_operations import ElasticSearchOperations
+from cloud_governance.common import ElasticSearchOperations
 
 
 def test_missing_datetime():

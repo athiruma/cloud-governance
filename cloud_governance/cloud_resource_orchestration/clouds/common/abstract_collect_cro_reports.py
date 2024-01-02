@@ -5,11 +5,11 @@ from datetime import datetime, timedelta
 import typeguard
 
 from cloud_governance.cloud_resource_orchestration.clouds.aws.ec2.cost_over_usage import CostOverUsage
-from cloud_governance.common.clouds.aws.iam.iam_operations import IAMOperations
-from cloud_governance.common.elasticsearch.elasticsearch_operations import ElasticSearchOperations
-from cloud_governance.common.jira.jira_operations import JiraOperations
-from cloud_governance.common.logger.init_logger import handler
-from cloud_governance.common.logger.logger_time_stamp import logger_time_stamp
+from cloud_governance.common import IAMOperations
+from cloud_governance.common import ElasticSearchOperations
+from cloud_governance.common import JiraOperations
+from cloud_governance.common import handler
+from cloud_governance.common import logger_time_stamp
 from cloud_governance.main.environment_variables import environment_variables
 
 

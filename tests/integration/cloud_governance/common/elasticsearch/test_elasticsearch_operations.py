@@ -4,7 +4,7 @@ import time
 from uuid import uuid4
 
 
-from cloud_governance.common.elasticsearch.elasticsearch_operations import ElasticSearchOperations
+from cloud_governance.common import ElasticSearchOperations
 from tests.integration.test_environment_variables import test_environment_variable
 
 es = ElasticSearchOperations(es_host=test_environment_variable.get('elasticsearch', ''),

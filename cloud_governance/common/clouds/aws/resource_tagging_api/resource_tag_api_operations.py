@@ -1,6 +1,6 @@
 import boto3
 
-from cloud_governance.common.logger.init_logger import logger
+from cloud_governance.common import logger
 
 
 class ResourceTagAPIOperations:

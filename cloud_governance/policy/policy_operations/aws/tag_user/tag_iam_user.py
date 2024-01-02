@@ -6,13 +6,13 @@ from ast import literal_eval
 import boto3
 import pandas as pd
 
-from cloud_governance.common.clouds.aws.iam.iam_operations import IAMOperations
-from cloud_governance.common.clouds.aws.utils.utils import Utils
-from cloud_governance.common.google_drive.google_drive_operations import GoogleDriveOperations
-from cloud_governance.common.ldap.ldap_search import LdapSearch
-from cloud_governance.common.logger.init_logger import logger
-from cloud_governance.common.mails.mail_message import MailMessage
-from cloud_governance.common.mails.postfix import Postfix
+from cloud_governance.common import IAMOperations
+from cloud_governance.common import Utils
+from cloud_governance.common import GoogleDriveOperations
+from cloud_governance.common import LdapSearch
+from cloud_governance.common import logger
+from cloud_governance.common import MailMessage
+from cloud_governance.common import Postfix
 from cloud_governance.main.environment_variables import environment_variables
 
 

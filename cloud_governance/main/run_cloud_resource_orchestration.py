@@ -1,7 +1,7 @@
 from tempfile import TemporaryDirectory
 
 from cloud_governance.cloud_resource_orchestration.monitor.cloud_monitor import CloudMonitor
-from cloud_governance.common.logger.logger_time_stamp import logger_time_stamp
+from cloud_governance.common import logger_time_stamp
 from cloud_governance.main.environment_variables import environment_variables
 
 

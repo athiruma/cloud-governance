@@ -2,7 +2,7 @@ import importlib
 import inspect
 from datetime import datetime
 
-from cloud_governance.common.logger.init_logger import logger
+from cloud_governance.common import logger
 from cloud_governance.policy.policy_operations.aws.zombie_non_cluster.run_zombie_non_cluster_policies import NonClusterZombiePolicy
 
 

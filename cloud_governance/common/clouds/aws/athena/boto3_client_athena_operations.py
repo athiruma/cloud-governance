@@ -1,9 +1,9 @@
 import boto3
 import typeguard
 
-from cloud_governance.common.clouds.aws.athena.abstract_athena_operations import AbstractAthenaOperations
-from cloud_governance.common.logger.init_logger import logger
-from cloud_governance.common.logger.logger_time_stamp import logger_time_stamp
+from cloud_governance.common import AbstractAthenaOperations
+from cloud_governance.common import logger
+from cloud_governance.common import logger_time_stamp
 
 
 class BotoClientAthenaOperations(AbstractAthenaOperations):

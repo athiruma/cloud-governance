@@ -6,9 +6,9 @@ import pytz
 from azure.core.exceptions import HttpResponseError
 from azure.mgmt.costmanagement.models import QueryTimePeriod
 
-from cloud_governance.common.clouds.azure.subscriptions.azure_operations import AzureOperations
-from cloud_governance.common.logger.init_logger import logger
-from cloud_governance.common.logger.logger_time_stamp import logger_time_stamp
+from cloud_governance.common import AzureOperations
+from cloud_governance.common import logger
+from cloud_governance.common import logger_time_stamp
 
 
 class CostManagementOperations:

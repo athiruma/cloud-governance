@@ -1,4 +1,4 @@
-from cloud_governance.common.clouds.azure.subscriptions.azure_operations import AzureOperations
+from cloud_governance.common import AzureOperations
 
 
 def test_get_subscription_id():

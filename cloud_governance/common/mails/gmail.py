@@ -1,6 +1,6 @@
 import smtplib
 
-from cloud_governance.common.logger.init_logger import logger
+from cloud_governance.common import logger
 from cloud_governance.main.environment_variables import environment_variables
 
 

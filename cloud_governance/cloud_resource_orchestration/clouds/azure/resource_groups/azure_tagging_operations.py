@@ -4,8 +4,8 @@ import typeguard
 
 from cloud_governance.cloud_resource_orchestration.clouds.common.abstract_tagging_operations import \
     AbstractTaggingOperations
-from cloud_governance.common.clouds.azure.compute.resource_group_operations import ResourceGroupOperations
-from cloud_governance.common.logger.logger_time_stamp import logger_time_stamp
+from cloud_governance.common import ResourceGroupOperations
+from cloud_governance.common import logger_time_stamp
 
 
 class AzureTaggingOperations(AbstractTaggingOperations):

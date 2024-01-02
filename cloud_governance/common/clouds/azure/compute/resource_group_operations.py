@@ -4,8 +4,8 @@ from azure.core.polling import LROPoller
 from azure.mgmt.resource import ResourceManagementClient
 from azure.mgmt.resource.resources.v2022_09_01.models import ResourceGroup, GenericResourceExpanded, TagsResource, Tags
 
-from cloud_governance.common.clouds.azure.compute.common_operations import CommonOperations
-from cloud_governance.common.logger.logger_time_stamp import logger_time_stamp
+from cloud_governance.common import CommonOperations
+from cloud_governance.common import logger_time_stamp
 
 
 class ResourceGroupOperations(CommonOperations):

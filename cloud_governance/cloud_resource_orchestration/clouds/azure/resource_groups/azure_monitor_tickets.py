@@ -1,25 +1,9 @@
 
 
 import json
-import tempfile
-from abc import ABC
-from datetime import datetime
 
-import typeguard
-
-from cloud_governance.cloud_resource_orchestration.clouds.aws.ec2.aws_tagging_operations import AWSTaggingOperations
 from cloud_governance.cloud_resource_orchestration.common.abstract_monitor_tickets import AbstractMonitorTickets
-from cloud_governance.cloud_resource_orchestration.utils.common_operations import get_tag_value_by_name
-from cloud_governance.common.clouds.aws.athena.pyathena_operations import PyAthenaOperations
-from cloud_governance.common.clouds.aws.ec2.ec2_operations import EC2Operations
-from cloud_governance.common.elasticsearch.elasticsearch_operations import ElasticSearchOperations
-from cloud_governance.common.jira.jira_operations import JiraOperations
-from cloud_governance.common.ldap.ldap_search import LdapSearch
-from cloud_governance.common.logger.init_logger import handler, logger
-from cloud_governance.common.logger.logger_time_stamp import logger_time_stamp
-from cloud_governance.common.mails.mail_message import MailMessage
-from cloud_governance.common.mails.postfix import Postfix
-from cloud_governance.main.environment_variables import environment_variables
+from cloud_governance.common import logger_time_stamp
 
 
 class AzureMonitorTickets(AbstractMonitorTickets):

@@ -1,4 +1,4 @@
-from cloud_governance.common.logger.logger_time_stamp import logger_time_stamp
+from cloud_governance.common import logger_time_stamp
 from cloud_governance.policy.policy_runners.common_policy_runner import CommonPolicyRunner
 
 

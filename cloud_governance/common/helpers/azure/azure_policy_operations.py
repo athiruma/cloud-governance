@@ -1,9 +1,9 @@
 
-from cloud_governance.common.clouds.azure.compute.compute_operations import ComputeOperations
-from cloud_governance.common.clouds.azure.compute.resource_group_operations import ResourceGroupOperations
-from cloud_governance.common.helpers.abstract_policy_operations import AbstractPolicyOperations
-from cloud_governance.common.logger.init_logger import logger
-from cloud_governance.common.utils.utils import Utils
+from cloud_governance.common import ComputeOperations
+from cloud_governance.common import ResourceGroupOperations
+from cloud_governance.common import AbstractPolicyOperations
+from cloud_governance.common import logger
+from cloud_governance.common import Utils
 
 
 class AzurePolicyOperations(AbstractPolicyOperations):

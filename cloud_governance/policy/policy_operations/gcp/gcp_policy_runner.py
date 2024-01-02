@@ -1,7 +1,7 @@
 import importlib
 import inspect
 
-from cloud_governance.common.jira.jira import logger
+from cloud_governance.common import logger
 from cloud_governance.main.environment_variables import environment_variables
 
 

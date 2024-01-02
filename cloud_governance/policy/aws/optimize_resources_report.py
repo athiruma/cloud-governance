@@ -2,9 +2,9 @@ import json
 
 import boto3
 
-from cloud_governance.common.clouds.aws.support.support_operations import SupportOperations
-from cloud_governance.common.clouds.aws.utils.common_methods import get_tag_value_from_tags
-from cloud_governance.common.logger.init_logger import logger
+from cloud_governance.common import SupportOperations
+from cloud_governance.common import get_tag_value_from_tags
+from cloud_governance.common import logger
 
 # @Todo, focusing only on cost-optimizing service: Need to find the tags for, rds, route53, ecr
 

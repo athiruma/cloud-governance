@@ -2,8 +2,8 @@ import typeguard
 from pyathena import connect
 from pyathena.pandas.cursor import PandasCursor
 
-from cloud_governance.common.clouds.aws.athena.abstract_athena_operations import AbstractAthenaOperations
-from cloud_governance.common.logger.logger_time_stamp import logger_time_stamp
+from cloud_governance.common import AbstractAthenaOperations
+from cloud_governance.common import logger_time_stamp
 
 
 class PyAthenaOperations(AbstractAthenaOperations):

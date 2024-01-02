@@ -1,5 +1,5 @@
 
-from cloud_governance.common.clouds.aws.price.price import AWSPrice
+from cloud_governance.common import AWSPrice
 from cloud_governance.main.environment_variables import environment_variables
 
 

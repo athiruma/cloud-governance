@@ -1,11 +1,11 @@
 import boto3
 import typeguard
 
-from cloud_governance.common.clouds.aws.ec2.ec2_operations import EC2Operations
-from cloud_governance.common.jira.jira_operations import JiraOperations
-from cloud_governance.common.ldap.ldap_search import LdapSearch
-from cloud_governance.common.logger.init_logger import logger
-from cloud_governance.common.logger.logger_time_stamp import logger_time_stamp
+from cloud_governance.common import EC2Operations
+from cloud_governance.common import JiraOperations
+from cloud_governance.common import LdapSearch
+from cloud_governance.common import logger
+from cloud_governance.common import logger_time_stamp
 from cloud_governance.main.environment_variables import environment_variables
 from cloud_governance.policy.policy_operations.aws.tag_cluster.tag_cluster_operations import TagClusterOperations
 

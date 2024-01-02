@@ -3,9 +3,9 @@ from unittest.mock import patch
 
 import pandas
 
-from cloud_governance.common.clouds.aws.athena.abstract_athena_operations import AbstractAthenaOperations
-from cloud_governance.common.clouds.aws.athena.boto3_client_athena_operations import BotoClientAthenaOperations
-from cloud_governance.common.clouds.aws.athena.pyathena_operations import PyAthenaOperations
+from cloud_governance.common import AbstractAthenaOperations
+from cloud_governance.common import BotoClientAthenaOperations
+from cloud_governance.common import PyAthenaOperations
 
 
 class ParameterNotFoundException(Exception):

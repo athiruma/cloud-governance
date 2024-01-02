@@ -5,12 +5,12 @@ from ast import  literal_eval
 
 from typeguard import typechecked
 
-from cloud_governance.common.clouds.gcp.google_account import GoogleAccount
-from cloud_governance.common.elasticsearch.elastic_upload import ElasticUpload
-from cloud_governance.common.google_drive.upload_to_gsheet import UploadToGsheet
-from cloud_governance.common.logger.logger_time_stamp import logger_time_stamp
+from cloud_governance.common import GoogleAccount
+from cloud_governance.common import ElasticUpload
+from cloud_governance.common import UploadToGsheet
+from cloud_governance.common import logger_time_stamp
 from cloud_governance.main.environment_variables import environment_variables
-from cloud_governance.common.logger.init_logger import logger
+from cloud_governance.common import logger
 
 
 class CostBillingReports:

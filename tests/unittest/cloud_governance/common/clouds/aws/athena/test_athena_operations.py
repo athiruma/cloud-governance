@@ -1,4 +1,4 @@
-from cloud_governance.common.clouds.aws.athena.pyathena_operations import PyAthenaOperations
+from cloud_governance.common import PyAthenaOperations
 from tests.unittest.cloud_governance.common.clouds.aws.mocks.aws_mock import mock_athena
 
 

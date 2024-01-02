@@ -1,10 +1,10 @@
 from ast import literal_eval
 
-from cloud_governance.common.clouds.aws.ec2.ec2_operations import EC2Operations
-from cloud_governance.common.elasticsearch.elastic_upload import ElasticUpload
-from cloud_governance.common.clouds.aws.cost_explorer.cost_explorer_operations import CostExplorerOperations
-from cloud_governance.common.logger.init_logger import logger
-from cloud_governance.common.logger.logger_time_stamp import logger_time_stamp
+from cloud_governance.common import EC2Operations
+from cloud_governance.common import ElasticUpload
+from cloud_governance.common import CostExplorerOperations
+from cloud_governance.common import logger
+from cloud_governance.common import logger_time_stamp
 from cloud_governance.main.environment_variables import environment_variables
 
 

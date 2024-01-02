@@ -5,12 +5,12 @@ from ast import literal_eval
 
 import boto3
 
-from cloud_governance.common.clouds.aws.iam.iam_operations import IAMOperations
-from cloud_governance.common.clouds.aws.savingsplan.savings_plans_operations import SavingsPlansOperations
-from cloud_governance.common.logger.logger_time_stamp import logger_time_stamp
+from cloud_governance.common import IAMOperations
+from cloud_governance.common import SavingsPlansOperations
+from cloud_governance.common import logger_time_stamp
 
-from cloud_governance.common.logger.init_logger import logger, handler
-from cloud_governance.common.clouds.aws.cost_explorer.cost_explorer_operations import CostExplorerOperations
+from cloud_governance.common import logger, handler
+from cloud_governance.common import CostExplorerOperations
 from cloud_governance.policy.aws.cost_billing_reports import CostBillingReports
 
 

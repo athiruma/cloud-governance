@@ -1,8 +1,8 @@
 from datetime import datetime
 from multiprocessing import Process, Queue
 
-from cloud_governance.common.clouds.aws.utils.utils import Utils
-from cloud_governance.common.logger.init_logger import logger
+from cloud_governance.common import Utils
+from cloud_governance.common import logger
 from cloud_governance.policy.policy_operations.aws.tag_cluster.tag_cluster_operations import TagClusterOperations
 from cloud_governance.policy.policy_operations.aws.tag_non_cluster.remove_non_cluster_tags import RemoveNonClusterTags
 

@@ -3,8 +3,8 @@ from datetime import datetime
 from typing import Union
 
 
-from cloud_governance.common.elasticsearch.elasticsearch_operations import ElasticSearchOperations
-from cloud_governance.common.logger.init_logger import logger
+from cloud_governance.common import ElasticSearchOperations
+from cloud_governance.common import logger
 from cloud_governance.policy.policy_runners.common.abstract_upload import AbstractUpload
 
 

@@ -3,8 +3,8 @@ import tempfile
 import pandas as pd
 import typeguard
 
-from cloud_governance.common.clouds.aws.s3.s3_operations import S3Operations
-from cloud_governance.common.logger.logger_time_stamp import logger_time_stamp
+from cloud_governance.common import S3Operations
+from cloud_governance.common import logger_time_stamp
 
 
 class PandasOperations:

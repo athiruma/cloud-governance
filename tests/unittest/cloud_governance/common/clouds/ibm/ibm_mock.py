@@ -6,7 +6,7 @@ import tempfile
 
 from SoftLayer import BaseClient
 
-from cloud_governance.common.logger.init_logger import logger
+from cloud_governance.common import logger
 
 temp_dir = tempfile.TemporaryDirectory()
 temp_file = os.path.join(temp_dir.name, 'mock_ibm_resources.json')

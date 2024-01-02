@@ -1,7 +1,7 @@
 import datetime
 import os
 
-from cloud_governance.common.clouds.aws.price.price import AWSPrice
+from cloud_governance.common import AWSPrice
 
 
 def test_price():

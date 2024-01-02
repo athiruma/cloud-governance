@@ -7,13 +7,13 @@ from datetime import date, datetime, timedelta
 import typeguard
 from botocore.exceptions import ClientError
 
-from cloud_governance.common.clouds.aws.ec2.ec2_operations import EC2Operations
-from cloud_governance.common.clouds.aws.s3.s3_operations import S3Operations
-from cloud_governance.common.jira.jira import logger
-from cloud_governance.common.logger.init_logger import handler
-from cloud_governance.common.logger.logger_time_stamp import logger_time_stamp
-from cloud_governance.common.mails.mail_message import MailMessage
-from cloud_governance.common.mails.postfix import Postfix
+from cloud_governance.common import EC2Operations
+from cloud_governance.common import S3Operations
+from cloud_governance.common import logger
+from cloud_governance.common import handler
+from cloud_governance.common import logger_time_stamp
+from cloud_governance.common import MailMessage
+from cloud_governance.common import Postfix
 from cloud_governance.main.environment_variables import environment_variables
 
 

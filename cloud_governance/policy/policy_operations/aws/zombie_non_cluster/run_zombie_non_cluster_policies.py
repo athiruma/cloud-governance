@@ -3,18 +3,18 @@ from ast import literal_eval
 
 import boto3
 
-from cloud_governance.common.clouds.aws.cloudtrail.cloudtrail_operations import CloudTrailOperations
-from cloud_governance.common.clouds.aws.iam.iam_operations import IAMOperations
-from cloud_governance.common.clouds.aws.ec2.ec2_operations import EC2Operations
-from cloud_governance.common.clouds.aws.price.resources_pricing import ResourcesPricing
-from cloud_governance.common.clouds.aws.s3.s3_operations import S3Operations
-from cloud_governance.common.elasticsearch.elastic_upload import ElasticUpload
-from cloud_governance.common.elasticsearch.elasticsearch_operations import ElasticSearchOperations
-from cloud_governance.common.helpers.aws.aws_policy_operations import AWSPolicyOperations
-from cloud_governance.common.ldap.ldap_search import LdapSearch
-from cloud_governance.common.logger.init_logger import logger
-from cloud_governance.common.mails.mail_message import MailMessage
-from cloud_governance.common.mails.postfix import Postfix
+from cloud_governance.common import CloudTrailOperations
+from cloud_governance.common import IAMOperations
+from cloud_governance.common import EC2Operations
+from cloud_governance.common import ResourcesPricing
+from cloud_governance.common import S3Operations
+from cloud_governance.common import ElasticUpload
+from cloud_governance.common import ElasticSearchOperations
+from cloud_governance.common import AWSPolicyOperations
+from cloud_governance.common import LdapSearch
+from cloud_governance.common import logger
+from cloud_governance.common import MailMessage
+from cloud_governance.common import Postfix
 from cloud_governance.main.environment_variables import environment_variables
 from cloud_governance.policy.aws.zombie_cluster_resource import ZombieClusterResources
 

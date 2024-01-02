@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
 
-from cloud_governance.common.elasticsearch.elastic_upload import ElasticUpload
+from cloud_governance.common import ElasticUpload
 from cloud_governance.main.environment_variables import environment_variables
 
 

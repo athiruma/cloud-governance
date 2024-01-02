@@ -1,10 +1,10 @@
 import datetime
 from ast import literal_eval
 
-from cloud_governance.common.clouds.ibm.account.ibm_account import IBMAccount
-from cloud_governance.common.logger.init_logger import logger
-from cloud_governance.common.mails.mail_message import MailMessage
-from cloud_governance.common.mails.postfix import Postfix
+from cloud_governance.common import IBMAccount
+from cloud_governance.common import logger
+from cloud_governance.common import MailMessage
+from cloud_governance.common import Postfix
 from cloud_governance.main.environment_variables import environment_variables
 
 

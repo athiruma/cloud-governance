@@ -6,7 +6,7 @@ import typeguard
 from cloud_governance.cloud_resource_orchestration.clouds.azure.resource_groups.cost_over_usage import CostOverUsage
 from cloud_governance.cloud_resource_orchestration.clouds.common.abstract_collect_cro_reports import \
     AbstractCollectCROReports
-from cloud_governance.common.logger.logger_time_stamp import logger_time_stamp
+from cloud_governance.common import logger_time_stamp
 from cloud_governance.main.environment_variables import environment_variables
 
 

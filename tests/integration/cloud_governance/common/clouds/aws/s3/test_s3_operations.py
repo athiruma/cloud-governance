@@ -1,6 +1,6 @@
 
 import tempfile
-from cloud_governance.common.clouds.aws.s3.s3_operations import S3Operations
+from cloud_governance.common import S3Operations
 from tests.integration.test_environment_variables import test_environment_variable
 from uuid import uuid4
 import os

@@ -2,7 +2,7 @@ import os.path
 
 from jinja2 import Environment, FileSystemLoader
 
-from cloud_governance.common.ldap.ldap_search import LdapSearch
+from cloud_governance.common import LdapSearch
 from cloud_governance.main.environment_variables import environment_variables
 
 

@@ -3,7 +3,7 @@ from azure.mgmt.billing import BillingManagementClient
 from azure.mgmt.costmanagement import CostManagementClient
 from azure.mgmt.subscription import SubscriptionClient
 
-from cloud_governance.common.logger.init_logger import logger
+from cloud_governance.common import logger
 from cloud_governance.main.environment_variables import environment_variables
 
 

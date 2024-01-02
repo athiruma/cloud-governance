@@ -2,9 +2,9 @@ from datetime import datetime, timedelta
 
 import boto3
 
-from cloud_governance.common.clouds.aws.cloudtrail.cloudtrail_operations import CloudTrailOperations
-from cloud_governance.common.clouds.aws.dynamodb.dynamodb_operations import DynamoDbOperations
-from cloud_governance.common.logger.init_logger import logger
+from cloud_governance.common import CloudTrailOperations
+from cloud_governance.common import DynamoDbOperations
+from cloud_governance.common import logger
 from cloud_governance.main.environment_variables import environment_variables
 
 

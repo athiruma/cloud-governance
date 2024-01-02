@@ -2,8 +2,8 @@ import csv
 
 import boto3
 
-from cloud_governance.common.clouds.aws.utils.utils import Utils
-from cloud_governance.common.logger.init_logger import logger
+from cloud_governance.common import Utils
+from cloud_governance.common import logger
 from cloud_governance.policy.aws.zombie_cluster_resource import ZombieClusterResources
 
 

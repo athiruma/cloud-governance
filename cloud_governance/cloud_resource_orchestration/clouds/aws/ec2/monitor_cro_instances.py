@@ -1,7 +1,7 @@
 
 from cloud_governance.cloud_resource_orchestration.utils.common_operations import check_name_and_get_key_from_tags
-from cloud_governance.common.clouds.aws.ec2.ec2_operations import EC2Operations
-from cloud_governance.common.logger.logger_time_stamp import logger_time_stamp
+from cloud_governance.common import EC2Operations
+from cloud_governance.common import logger_time_stamp
 from cloud_governance.main.environment_variables import environment_variables
 
 

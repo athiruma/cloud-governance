@@ -6,11 +6,11 @@ from datetime import datetime
 import typeguard
 
 from cloud_governance.cloud_resource_orchestration.utils.common_operations import string_equal_ignore_case
-from cloud_governance.common.jira.jira_exceptions import JiraExceptions
-from cloud_governance.common.logger.init_logger import logger
-from cloud_governance.common.logger.logger_time_stamp import logger_time_stamp
+from cloud_governance.common import JiraExceptions
+from cloud_governance.common import logger
+from cloud_governance.common import logger_time_stamp
 
-from cloud_governance.common.jira.jira import Jira
+from cloud_governance.common import Jira
 from cloud_governance.main.environment_variables import environment_variables
 
 

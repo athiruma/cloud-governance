@@ -1,7 +1,7 @@
 import boto3
 from boto3.dynamodb.types import TypeSerializer, TypeDeserializer
 
-from cloud_governance.common.logger.init_logger import logger
+from cloud_governance.common import logger
 
 
 class DynamoDbOperations:

@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from cloud_governance.common.clouds.gcp.google_account import GoogleAccount
+from cloud_governance.common import GoogleAccount
 from cloud_governance.main.environment_variables import environment_variables
 
 

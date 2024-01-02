@@ -2,7 +2,7 @@ from datetime import date
 
 import boto3
 
-from cloud_governance.common.clouds.aws.ec2.ec2_operations import EC2Operations
+from cloud_governance.common import EC2Operations
 from cloud_governance.policy.aws.zombie_cluster_resource import ZombieClusterResources
 
 

@@ -3,7 +3,7 @@ import os
 import boto3
 from moto import mock_ec2, mock_s3
 
-from cloud_governance.common.clouds.aws.s3.s3_operations import S3Operations
+from cloud_governance.common import S3Operations
 from cloud_governance.main.environment_variables import environment_variables
 from cloud_governance.policy.aws.ebs_in_use import EbsInUse
 

@@ -1,6 +1,6 @@
 from typing import Callable
 
-from cloud_governance.common.logger.init_logger import logger
+from cloud_governance.common import logger
 from cloud_governance.policy.policy_runners.common.abstract_policy_runner import AbstractPolicyRunner
 
 

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
-from cloud_governance.common.clouds.azure.compute.compute_operations import ComputeOperations
-from cloud_governance.common.clouds.azure.compute.resource_group_operations import ResourceGroupOperations
+from cloud_governance.common import ComputeOperations
+from cloud_governance.common import ResourceGroupOperations
 
 
 class AbstractResource(ABC):

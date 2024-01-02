@@ -2,12 +2,12 @@ from datetime import datetime
 
 import typeguard
 
-from cloud_governance.common.clouds.aws.ec2.ec2_operations import EC2Operations
-from cloud_governance.common.elasticsearch.elasticsearch_operations import ElasticSearchOperations
+from cloud_governance.common import EC2Operations
+from cloud_governance.common import ElasticSearchOperations
 from cloud_governance.main.environment_variables import environment_variables
 from cloud_governance.policy.policy_operations.aws.zombie_cluster.zombie_cluster_common_methods import ZombieClusterCommonMethods
-from cloud_governance.common.logger.init_logger import logger
-from cloud_governance.common.logger.logger_time_stamp import logger_time_stamp
+from cloud_governance.common import logger
+from cloud_governance.common import logger_time_stamp
 from cloud_governance.policy.aws.zombie_cluster_resource import ZombieClusterResources
 
 

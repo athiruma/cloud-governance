@@ -7,8 +7,8 @@ from cloud_governance.cloud_resource_orchestration.clouds.aws.ec2.cost_over_usag
 from cloud_governance.cloud_resource_orchestration.clouds.aws.ec2.monitor_cro_instances import MonitorCROInstances
 from cloud_governance.cloud_resource_orchestration.clouds.aws.ec2.aws_monitor_tickets import AWSMonitorTickets
 from cloud_governance.cloud_resource_orchestration.clouds.aws.ec2.tag_cro_instances import TagCROInstances
-from cloud_governance.common.logger.init_logger import logger
-from cloud_governance.common.logger.logger_time_stamp import logger_time_stamp
+from cloud_governance.common import logger
+from cloud_governance.common import logger_time_stamp
 from cloud_governance.main.environment_variables import environment_variables
 
 

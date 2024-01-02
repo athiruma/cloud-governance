@@ -1,9 +1,9 @@
 import boto3
 
 from cloud_governance.policy.policy_operations.aws.zombie_cluster.zombie_cluster_common_methods import ZombieClusterCommonMethods
-from cloud_governance.common.clouds.aws.ec2.ec2_operations import EC2Operations
-from cloud_governance.common.logger.init_logger import logger
-from cloud_governance.common.clouds.aws.utils.utils import Utils
+from cloud_governance.common import EC2Operations
+from cloud_governance.common import logger
+from cloud_governance.common import Utils
 
 # @todo add next token
 # response = client.get_servers()

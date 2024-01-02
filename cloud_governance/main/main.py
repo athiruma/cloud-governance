@@ -8,7 +8,7 @@ from cloud_governance.main.main_oerations.main_operations import MainOperations
 from cloud_governance.main.run_cloud_resource_orchestration import run_cloud_resource_orchestration
 from cloud_governance.policy.policy_operations.aws.cost_expenditure.cost_report_policies import CostReportPolicies
 from cloud_governance.policy.policy_operations.azure.azure_policy_runner import AzurePolicyRunner
-from cloud_governance.common.logger.logger_time_stamp import logger_time_stamp, logger
+from cloud_governance.common import logger_time_stamp, logger
 from cloud_governance.policy.policy_operations.aws.tag_cluster.run_tag_cluster_resouces import tag_cluster_resource, \
     remove_cluster_resources_tags
 from cloud_governance.policy.policy_operations.aws.tag_non_cluster.run_tag_non_cluster_resources import tag_non_cluster_resource, \
@@ -20,7 +20,7 @@ from cloud_governance.policy.policy_operations.gitleaks.gitleaks import GitLeaks
 from cloud_governance.policy.policy_operations.ibm.ibm_operations.ibm_policy_runner import IBMPolicyRunner
 from cloud_governance.main.environment_variables import environment_variables
 from cloud_governance.main.es_uploader import ESUploader
-from cloud_governance.common.clouds.aws.s3.s3_operations import S3Operations
+from cloud_governance.common import S3Operations
 from cloud_governance.policy.policy_operations.aws.zombie_cluster.validate_zombies import ValidateZombies
 from cloud_governance.policy.policy_operations.aws.zombie_non_cluster.zombie_non_cluster_polices import ZombieNonClusterPolicies
 

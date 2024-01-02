@@ -2,10 +2,10 @@ from datetime import datetime
 
 import boto3
 
-from cloud_governance.common.clouds.aws.cloudtrail.cloudtrail_operations import CloudTrailOperations
-from cloud_governance.common.clouds.aws.ec2.ec2_operations import EC2Operations
-from cloud_governance.common.clouds.aws.iam.iam_operations import IAMOperations
-from cloud_governance.common.clouds.aws.utils.utils import Utils
+from cloud_governance.common import CloudTrailOperations
+from cloud_governance.common import EC2Operations
+from cloud_governance.common import IAMOperations
+from cloud_governance.common import Utils
 
 
 class TagClusterOperations:
