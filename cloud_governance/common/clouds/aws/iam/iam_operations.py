@@ -3,6 +3,7 @@ import os
 import boto3
 
 from cloud_governance.common.clouds.aws.utils.utils import Utils
+from cloud_governance.common.logger.init_logger import logger
 
 
 class IAMOperations:
@@ -72,3 +73,26 @@ class IAMOperations:
         response = self.__sts_client.get_caller_identity()
         account_id = response['Account']
         return account_id
+
+    def get_role(self, role_name: str):
+        """
+        This method returns the role data
+        :param role_name:
+        :type role_name:
+        :return:
+        :rtype:
+        """
+        try:
+            response = self.iam_client.get_role(RoleName=role_name).get('Role', {})
+        except Exception as err:
+            logger.error(f'Error in Fetching role: {err}')
+            response = {}
+        return response
+
+    def list_roles(self):
+        """
+        This method returns the list of roles
+        :return:
+        :rtype:
+        """
+        return self.utils.get_details_resource_list(func_name=self.iam_client.list_roles, input_tag='Roles', check_tag='Marker')

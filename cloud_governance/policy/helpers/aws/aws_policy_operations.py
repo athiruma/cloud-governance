@@ -2,6 +2,7 @@
 import boto3
 
 from cloud_governance.common.clouds.aws.ec2.ec2_operations import EC2Operations
+from cloud_governance.common.clouds.aws.iam.iam_operations import IAMOperations
 from cloud_governance.common.clouds.aws.s3.s3_operations import S3Operations
 from cloud_governance.policy.helpers.abstract_policy_operations import AbstractPolicyOperations
 from cloud_governance.common.logger.init_logger import logger
@@ -16,6 +17,7 @@ class AWSPolicyOperations(AbstractPolicyOperations):
         self.__s3operations = S3Operations(region_name=self._region)
         self._ec2_client = boto3.client('ec2', region_name=self._region)
         self._ec2_operations = EC2Operations(region=self._region)
+        self._iam_operations = IAMOperations()
         self._s3_client = boto3.client('s3')
         self._iam_client = boto3.client('iam')
 
@@ -47,7 +49,7 @@ class AWSPolicyOperations(AbstractPolicyOperations):
         try:
             if self._policy == 's3_inactive':
                 self._s3_client.delete_bucket(Bucket=resource_id)
-            elif self._policy == 'empty_roles':
+            elif self._policy in ('empty_roles', 'unused_roles'):
                 self._iam_client.delete_role(RoleName=resource_id)
             elif self._policy == 'unattached_volume':
                 self._ec2_client.delete_volume(VolumeId=resource_id)
