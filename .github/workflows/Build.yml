@@ -32,7 +32,6 @@ jobs:
           git config --global user.name  "example"
           bumpversion patch
           git commit .bumpversion.cfg setup.py -m 'bump version to exist version v'$version
-          git pull
           git push 
           git push --tag
           echo "Completed"
