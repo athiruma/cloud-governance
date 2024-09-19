@@ -12,325 +12,12 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  unittest:
-    name: unittest
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [ '3.8', '3.9', '3.10', '3.11', '3.12' ]
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install dependencies
-        run: |
-          # ldap requirements
-          sudo apt update -y
-          sudo apt-get install build-essential python3-dev libldap2-dev libsasl2-dev vim -y
-          python -m pip install --upgrade pip
-          pip install flake8 pytest pytest-cov
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          if [ -f tests_requirements.txt ]; then pip install -r tests_requirements.txt; fi
-      - name: Lint with flake8
-        run: |
-          # stop the build if there are Python syntax errors or undefined names
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-      - name: Configure AWS credentials for pytest
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.REGION }}
-      - name: 📃 Unittest tests with pytest
-        env:
-          BUCKET: ${{ secrets.BUCKET }}
-          REGION: ${{ secrets.REGION }}
-        run: |
-          pytest -v tests/unittest --cov=cloud_governqance --cov-report=term-missing
-          coverage run -m pytest -v tests/unittest
-          coverage report -m
-      - name: 🎥 Publish to coveralls.io
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          pip install coveralls
-          COVERALLS_REPO_TOKEN=${{ secrets.COVERALLS_REPO_TOKEN }} coveralls
-
-  terraform_apply:
-    name: terraform_apply
-    needs: [ unittest ]
-    runs-on: ubuntu-latest
-    outputs:
-      INSTANCE_ID: ${{ steps.terraform_instance_id.outputs.INSTANCE_ID }}
-    steps:
-      - uses: actions/checkout@v4
-      - name: Configure AWS credentials for creating EC2 instance
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.REGION }}
-      - name: Install terraform and terragrunt
-        run: |
-          # Install Terrafrom
-          sudo apt-get update && sudo apt-get install -y gnupg software-properties-common curl
-          curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
-          sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
-          sudo apt-get -y update && sudo apt-get install -y terraform
-          pip3 install jinja2
-          # install terragrunt
-          wget https://github.com/gruntwork-io/terragrunt/releases/download/v0.38.6/terragrunt_linux_amd64
-          mv terragrunt_linux_amd64 terragrunt
-          mv terragrunt /usr/local/bin/terragrunt
-          chmod 775 /usr/local/bin/terragrunt
-      - name: Create Terraform AWS instance
-        id: terraform_instance_id
-        env:
-          IMAGE_ID: ${{ secrets.IMAGE_ID }}
-          INSTANCE_TYPE: ${{ secrets.INSTANCE_TYPE }}
-          ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
-          ROLE_NAME: ${{ secrets.ROLE_NAME }}
-          REGION_NAME: ${{ secrets.TERRAFORM_REGION }}
-          TAG_NAME: ${{ secrets.TAG_NAME }}
-        run: |
-          cd terraform/aws_instance
-          # terrafrom apply
-          terragrunt apply -auto-approve 1> /dev/null
-          echo "INSTANCE_ID=$(terragrunt output -raw instance_id)" >> "$GITHUB_OUTPUT"
-      - name: Cache the Terraform State File
-        uses: actions/cache@v4
-        with:
-          path: terraform/aws_instance
-          key: terraform-state-${{ steps.terraform_instance_id.outputs.INSTANCE_ID }}
-
-  integration:
-    name: integration
-    needs: [unittest, terraform_apply]
-    runs-on: ubuntu-latest
-    strategy:
-      max-parallel: 1
-      matrix:
-        python-version: [ '3.8', '3.9', '3.10', '3.11', '3.12' ]
-    services:
-      elasticsearch:
-        image: docker.elastic.co/elasticsearch/elasticsearch:7.11.0
-        env:
-          discovery.type: single-node
-        options: >-
-          --health-cmd "curl http://localhost:9200/_cluster/health"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 10
-        ports:
-          - 9200:9200
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install dependencies
-        run: |
-          # ldap requirements
-          sudo apt update -y
-          sudo apt-get install build-essential python3-dev libldap2-dev libsasl2-dev vim -y
-          python -m pip install --upgrade pip
-          pip install flake8 pytest pytest-cov
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          if [ -f tests_requirements.txt ]; then pip install -r tests_requirements.txt; fi
-      - name: Lint with flake8
-        run: |
-          # stop the build if there are Python syntax errors or undefined names
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-      - name: Configure AWS credentials for pytest
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.REGION }}
-      - name: Set GCP credentials for pytest
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS_CONTENTS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
-          RUNNER_PATH: ${{ secrets.RUNNER_PATH }}
-        run: |
-          echo "$GOOGLE_APPLICATION_CREDENTIALS_CONTENTS" > "$RUNNER_PATH/gcp_service.json"
-          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_PATH/gcp_service.json" >> "$GITHUB_ENV"
-      - name: 📃 Integration tests with pytest
-        env:
-          BUCKET: ${{ secrets.BUCKET }}
-          REGION: ${{ secrets.REGION }}
-          ELASTICSEARCH: 'localhost'
-          ELASTICSEARCH_PORT: '9200'
-          INSTANCE_ID: ${{ needs.terraform_apply.outputs.INSTANCE_ID }}
-          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-          AZURE_ACCOUNT_ID: ${{ secrets.AZURE_ACCOUNT_ID }}
-          GCP_DATABASE_NAME: ${{ secrets.GCP_DATABASE_NAME }}
-          GCP_DATABASE_TABLE_NAME: ${{ secrets.GCP_DATABASE_TABLE_NAME }}
-        run: |
-          pytest -v tests/integration --cov=cloud_governqance --cov-report=term-missing
-          coverage run -m pytest -v tests/integration
-          coverage report -m
-      - name: 🎥 Publish to coveralls.io
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          pip install coveralls
-          COVERALLS_REPO_TOKEN=${{ secrets.COVERALLS_REPO_TOKEN }} coveralls
-
-  terraform_destroy:
-    name: terraform_destroy
-    needs: [ unittest, terraform_apply, integration ]
-    if: success() || failure()
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Configure AWS credentials for pytest
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.REGION }}
-      - name: Get Cache of the Terraform State File
-        uses: actions/cache@v4
-        with:
-          path: terraform/aws_instance
-          key: terraform-state-${{ needs.terraform_apply.outputs.INSTANCE_ID }}
-      - name: Install terraform and terragrunt
-        run: |
-          # Install Terrafrom
-          sudo apt-get update && sudo apt-get install -y gnupg software-properties-common curl
-          curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
-          sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
-          sudo apt-get -y update && sudo apt-get install -y terraform
-          pip3 install jinja2
-          # install terragrunt
-          wget https://github.com/gruntwork-io/terragrunt/releases/download/v0.38.6/terragrunt_linux_amd64
-          mv terragrunt_linux_amd64 terragrunt
-          mv terragrunt /usr/local/bin/terragrunt
-          chmod 775 /usr/local/bin/terragrunt
-      - name: Destroy AWS Terraform instance
-        env:
-          ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
-          ROLE_NAME: ${{ secrets.ROLE_NAME }}
-          REGION_NAME: ${{ secrets.TERRAFORM_REGION }}
-        run: |
-          cd terraform/aws_instance
-          # terraform destroy/
-          terragrunt destroy -auto-approve 1> /dev/null
-
-  pypi_upload:
-    name: pypi_upload
-    needs: [ unittest, terraform_apply, integration ]
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [ '3.12' ]
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: 🔨 Build and publish distribution 📦 to PyPI
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-        run: |
-          python -m pip install --upgrade pip
-          pip install setuptools wheel twine
-          python setup.py sdist bdist_wheel
-          twine upload dist/*
-
-  pypi_validate:
-    name: pypi_validate
-    needs: [ unittest, terraform_apply, integration, pypi_upload ]
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [ '3.12' ]
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Validate upload to PyPI
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-        run: |
-          # ldap requirements
-          sudo apt update -y
-          sudo apt-get install build-essential python3-dev libldap2-dev libsasl2-dev vim -y
-          echo '⌛ Wait till package will be updated in PyPI'
-          # Verfiy and wait till latest cloud-governance version will be updated in Pypi (timeout 900 seconds)
-          timeout=900
-          sleep_time=30
-          pip --no-cache-dir install setuptools cloud-governance --upgrade
-          expected_version=$(python3 setup.py --version)
-          build=$(pip freeze | grep cloud-governance | sed 's/==/=/g')
-          actual_version="$(cut -d'=' -f2 <<<"$build")"
-          current_wait_time=0
-          while [[ $current_wait_time < $timeout ]]; do
-              if [[ "$expected_version" = "$actual_version" ]]; then
-                echo 'cloud-governance version:' $expected_version 'was updated in Pypi'
-                break;
-              else
-                # sleep for x seconds
-                echo 'wait' "$((current_wait_time+sleep_time))" 'seconds'
-                sleep $sleep_time
-                current_wait_time="$((current_wait_time+sleep_time))"
-                pip uninstall -y cloud-governance
-                pip --no-cache-dir install cloud-governance --upgrade
-                build=$(pip freeze | grep cloud-governance | sed 's/==/=/g')
-                actual_version="$(cut -d'=' -f2 <<<"$build")"
-                if (( $current_wait_time == $timeout )); then
-                  echo "cloud-governance lastet version did not update in Pypi after 900 seconds - raise failure"
-                  exit 1
-                fi
-              fi
-          done
-
-  quay_upload:
-    name: quay_upload
-    needs: [ unittest, terraform_apply, integration, pypi_upload, pypi_validate ]
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [ '3.12' ]
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: ⌛ Upload to 🐋 quay.io
-        run: |
-          pip install setuptools
-          version=$(python3 setup.py --version)
-          sudo docker build --build-arg VERSION=$version -t quay.io/${{ secrets.QAUYIO_REPOSITORY }}/${{ secrets.PACKAGE_NAME }}:v$version .
-          sudo docker build --build-arg VERSION=latest -t quay.io/${{ secrets.QAUYIO_REPOSITORY }}/${{ secrets.PACKAGE_NAME }}:latest .
-          sudo docker login quay.io -u ${{ secrets.QAUYIO_ROBOT_USER }} -p ${{ secrets.QAUYIO_ROBOT_TOKEN }}
-          sudo docker push quay.io/${{ secrets.QAUYIO_REPOSITORY }}/${{ secrets.PACKAGE_NAME }}:v$version
-          sudo docker push quay.io/${{ secrets.QAUYIO_REPOSITORY }}/${{ secrets.PACKAGE_NAME }}:latest
-          echo 'Wait 30 sec till image will be updated in quay.io'
-          sleep 30
-
   bump_version:
     name: bump_version
     runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: [ '3.12' ]
-    needs: [ unittest, terraform_apply, integration, pypi_upload, pypi_validate, quay_upload ]
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
@@ -341,47 +28,383 @@ jobs:
         run: |
           pip install setuptools bumpversion
           version=$(python3 setup.py --version)
-          git checkout main
-          git config --global user.email ${{ secrets.EMAIL }}
-          git config --global user.name  ${{ secrets.NAME }}
-          git config pull.rebase false  # merge (the default strategy)
+          git config --global user.email eample@redhat.com
+          git config --global user.name  "example"
           bumpversion patch
-          # GITHUB_REPOSITORY already taken => GIT_REPOSITORY
           git commit .bumpversion.cfg setup.py -m 'bump version to exist version v'$version
-          git pull https://${{ secrets.GITHUB_TOKEN }}@${{ secrets.GIT_REPOSITORY}} main
-          git push https://${{ secrets.GITHUB_TOKEN }}@${{ secrets.GIT_REPOSITORY}} main
-          git push https://${{ secrets.GITHUB_TOKEN }}@${{ secrets.GIT_REPOSITORY}} --tag
+          git pull
+          git push 
+          git push --tag
+  # unittest:
+  #   name: unittest
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     matrix:
+  #       python-version: [ '3.8', '3.9', '3.10', '3.11', '3.12' ]
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Set up Python ${{ matrix.python-version }}
+  #       uses: actions/setup-python@v5
+  #       with:
+  #         python-version: ${{ matrix.python-version }}
+  #     - name: Install dependencies
+  #       run: |
+  #         # ldap requirements
+  #         sudo apt update -y
+  #         sudo apt-get install build-essential python3-dev libldap2-dev libsasl2-dev vim -y
+  #         python -m pip install --upgrade pip
+  #         pip install flake8 pytest pytest-cov
+  #         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+  #         if [ -f tests_requirements.txt ]; then pip install -r tests_requirements.txt; fi
+  #     - name: Lint with flake8
+  #       run: |
+  #         # stop the build if there are Python syntax errors or undefined names
+  #         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+  #         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+  #         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+  #     - name: Configure AWS credentials for pytest
+  #       uses: aws-actions/configure-aws-credentials@v4
+  #       with:
+  #         aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
+  #         aws-secret-access-key: ${{ secrets.SECRET_ACCESS_KEY }}
+  #         aws-region: ${{ secrets.REGION }}
+  #     - name: 📃 Unittest tests with pytest
+  #       env:
+  #         BUCKET: ${{ secrets.BUCKET }}
+  #         REGION: ${{ secrets.REGION }}
+  #       run: |
+  #         pytest -v tests/unittest --cov=cloud_governqance --cov-report=term-missing
+  #         coverage run -m pytest -v tests/unittest
+  #         coverage report -m
+  #     - name: 🎥 Publish to coveralls.io
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #       run: |
+  #         pip install coveralls
+  #         COVERALLS_REPO_TOKEN=${{ secrets.COVERALLS_REPO_TOKEN }} coveralls
 
-  e2e:
-    name: e2e
-    needs: [unittest, terraform_apply, integration, pypi_upload, pypi_validate, quay_upload, bump_version]
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        region: ['us-east-1', 'us-east-2', 'us-west-1', 'us-west-2', 'eu-central-1', 'ap-south-1', 'eu-north-1', 'ap-northeast-1', 'ap-southeast-1', 'ap-southeast-2', 'eu-south-1', 'eu-west-3', 'sa-east-1']
-        policy: ['instance_idle', 'instance_run', 'unattached_volume',  'ebs_in_use']
-        # we don't run zombie_cluster_resource due to long run
-    steps:
-      - uses: actions/checkout@v4
-      - name: ✔️ E2E tests using latest quay.io
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS_KEY }}
-        run: |
-          sudo podman run --rm --name cloud-governance -e policy=${{ matrix.policy }} -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -e AWS_DEFAULT_REGION=${{ matrix.region }} -e dry_run=yes -e policy_output=s3://${{ secrets.BUCKET }}/test/${{ matrix.region }} -e log_level=INFO quay.io/ebattat/cloud-governance
-  gitleaks:
-    name: gitleaks
-    needs: [ unittest, terraform_apply, integration, pypi_upload, pypi_validate, quay_upload, bump_version ]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: run gitleaks
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS_KEY }}
-        run: |
-          # gileaks policy
-          # GITHUB_TOKEN already taken => GIT_TOKEN
-          region='us-east-1'
-          policy='gitleaks'
-          sudo podman run --rm --name cloud-governance -e policy=$policy -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -e AWS_DEFAULT_REGION=$region -e git_access_token=${{ secrets.GIT_TOKEN }} -e git_repo=https://github.com/redhat-performance/cloud-governance -e policy_output=s3://${{ secrets.BUCKET }}/test/$region -e log_level=INFO quay.io/ebattat/cloud-governance > /dev/null
+  # terraform_apply:
+  #   name: terraform_apply
+  #   needs: [ unittest ]
+  #   runs-on: ubuntu-latest
+  #   outputs:
+  #     INSTANCE_ID: ${{ steps.terraform_instance_id.outputs.INSTANCE_ID }}
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Configure AWS credentials for creating EC2 instance
+  #       uses: aws-actions/configure-aws-credentials@v4
+  #       with:
+  #         aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
+  #         aws-secret-access-key: ${{ secrets.SECRET_ACCESS_KEY }}
+  #         aws-region: ${{ secrets.REGION }}
+  #     - name: Install terraform and terragrunt
+  #       run: |
+  #         # Install Terrafrom
+  #         sudo apt-get update && sudo apt-get install -y gnupg software-properties-common curl
+  #         curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+  #         sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+  #         sudo apt-get -y update && sudo apt-get install -y terraform
+  #         pip3 install jinja2
+  #         # install terragrunt
+  #         wget https://github.com/gruntwork-io/terragrunt/releases/download/v0.38.6/terragrunt_linux_amd64
+  #         mv terragrunt_linux_amd64 terragrunt
+  #         mv terragrunt /usr/local/bin/terragrunt
+  #         chmod 775 /usr/local/bin/terragrunt
+  #     - name: Create Terraform AWS instance
+  #       id: terraform_instance_id
+  #       env:
+  #         IMAGE_ID: ${{ secrets.IMAGE_ID }}
+  #         INSTANCE_TYPE: ${{ secrets.INSTANCE_TYPE }}
+  #         ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
+  #         ROLE_NAME: ${{ secrets.ROLE_NAME }}
+  #         REGION_NAME: ${{ secrets.TERRAFORM_REGION }}
+  #         TAG_NAME: ${{ secrets.TAG_NAME }}
+  #       run: |
+  #         cd terraform/aws_instance
+  #         # terrafrom apply
+  #         terragrunt apply -auto-approve 1> /dev/null
+  #         echo "INSTANCE_ID=$(terragrunt output -raw instance_id)" >> "$GITHUB_OUTPUT"
+  #     - name: Cache the Terraform State File
+  #       uses: actions/cache@v4
+  #       with:
+  #         path: terraform/aws_instance
+  #         key: terraform-state-${{ steps.terraform_instance_id.outputs.INSTANCE_ID }}
+
+  # integration:
+  #   name: integration
+  #   needs: [unittest, terraform_apply]
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     max-parallel: 1
+  #     matrix:
+  #       python-version: [ '3.8', '3.9', '3.10', '3.11', '3.12' ]
+  #   services:
+  #     elasticsearch:
+  #       image: docker.elastic.co/elasticsearch/elasticsearch:7.11.0
+  #       env:
+  #         discovery.type: single-node
+  #       options: >-
+  #         --health-cmd "curl http://localhost:9200/_cluster/health"
+  #         --health-interval 10s
+  #         --health-timeout 5s
+  #         --health-retries 10
+  #       ports:
+  #         - 9200:9200
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Set up Python ${{ matrix.python-version }}
+  #       uses: actions/setup-python@v5
+  #       with:
+  #         python-version: ${{ matrix.python-version }}
+  #     - name: Install dependencies
+  #       run: |
+  #         # ldap requirements
+  #         sudo apt update -y
+  #         sudo apt-get install build-essential python3-dev libldap2-dev libsasl2-dev vim -y
+  #         python -m pip install --upgrade pip
+  #         pip install flake8 pytest pytest-cov
+  #         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+  #         if [ -f tests_requirements.txt ]; then pip install -r tests_requirements.txt; fi
+  #     - name: Lint with flake8
+  #       run: |
+  #         # stop the build if there are Python syntax errors or undefined names
+  #         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+  #         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+  #         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+  #     - name: Configure AWS credentials for pytest
+  #       uses: aws-actions/configure-aws-credentials@v4
+  #       with:
+  #         aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
+  #         aws-secret-access-key: ${{ secrets.SECRET_ACCESS_KEY }}
+  #         aws-region: ${{ secrets.REGION }}
+  #     - name: Set GCP credentials for pytest
+  #       env:
+  #         GOOGLE_APPLICATION_CREDENTIALS_CONTENTS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+  #         RUNNER_PATH: ${{ secrets.RUNNER_PATH }}
+  #       run: |
+  #         echo "$GOOGLE_APPLICATION_CREDENTIALS_CONTENTS" > "$RUNNER_PATH/gcp_service.json"
+  #         echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_PATH/gcp_service.json" >> "$GITHUB_ENV"
+  #     - name: 📃 Integration tests with pytest
+  #       env:
+  #         BUCKET: ${{ secrets.BUCKET }}
+  #         REGION: ${{ secrets.REGION }}
+  #         ELASTICSEARCH: 'localhost'
+  #         ELASTICSEARCH_PORT: '9200'
+  #         INSTANCE_ID: ${{ needs.terraform_apply.outputs.INSTANCE_ID }}
+  #         AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  #         AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  #         AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+  #         AZURE_ACCOUNT_ID: ${{ secrets.AZURE_ACCOUNT_ID }}
+  #         GCP_DATABASE_NAME: ${{ secrets.GCP_DATABASE_NAME }}
+  #         GCP_DATABASE_TABLE_NAME: ${{ secrets.GCP_DATABASE_TABLE_NAME }}
+  #       run: |
+  #         pytest -v tests/integration --cov=cloud_governqance --cov-report=term-missing
+  #         coverage run -m pytest -v tests/integration
+  #         coverage report -m
+  #     - name: 🎥 Publish to coveralls.io
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #       run: |
+  #         pip install coveralls
+  #         COVERALLS_REPO_TOKEN=${{ secrets.COVERALLS_REPO_TOKEN }} coveralls
+
+  # terraform_destroy:
+  #   name: terraform_destroy
+  #   needs: [ unittest, terraform_apply, integration ]
+  #   if: success() || failure()
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Configure AWS credentials for pytest
+  #       uses: aws-actions/configure-aws-credentials@v4
+  #       with:
+  #         aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
+  #         aws-secret-access-key: ${{ secrets.SECRET_ACCESS_KEY }}
+  #         aws-region: ${{ secrets.REGION }}
+  #     - name: Get Cache of the Terraform State File
+  #       uses: actions/cache@v4
+  #       with:
+  #         path: terraform/aws_instance
+  #         key: terraform-state-${{ needs.terraform_apply.outputs.INSTANCE_ID }}
+  #     - name: Install terraform and terragrunt
+  #       run: |
+  #         # Install Terrafrom
+  #         sudo apt-get update && sudo apt-get install -y gnupg software-properties-common curl
+  #         curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+  #         sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+  #         sudo apt-get -y update && sudo apt-get install -y terraform
+  #         pip3 install jinja2
+  #         # install terragrunt
+  #         wget https://github.com/gruntwork-io/terragrunt/releases/download/v0.38.6/terragrunt_linux_amd64
+  #         mv terragrunt_linux_amd64 terragrunt
+  #         mv terragrunt /usr/local/bin/terragrunt
+  #         chmod 775 /usr/local/bin/terragrunt
+  #     - name: Destroy AWS Terraform instance
+  #       env:
+  #         ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
+  #         ROLE_NAME: ${{ secrets.ROLE_NAME }}
+  #         REGION_NAME: ${{ secrets.TERRAFORM_REGION }}
+  #       run: |
+  #         cd terraform/aws_instance
+  #         # terraform destroy/
+  #         terragrunt destroy -auto-approve 1> /dev/null
+
+  # pypi_upload:
+  #   name: pypi_upload
+  #   needs: [ unittest, terraform_apply, integration ]
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     matrix:
+  #       python-version: [ '3.12' ]
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Set up Python ${{ matrix.python-version }}
+  #       uses: actions/setup-python@v5
+  #       with:
+  #         python-version: ${{ matrix.python-version }}
+  #     - name: 🔨 Build and publish distribution 📦 to PyPI
+  #       env:
+  #         TWINE_USERNAME: __token__
+  #         TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+  #       run: |
+  #         python -m pip install --upgrade pip
+  #         pip install setuptools wheel twine
+  #         python setup.py sdist bdist_wheel
+  #         twine upload dist/*
+
+  # pypi_validate:
+  #   name: pypi_validate
+  #   needs: [ unittest, terraform_apply, integration, pypi_upload ]
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     matrix:
+  #       python-version: [ '3.12' ]
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Set up Python ${{ matrix.python-version }}
+  #       uses: actions/setup-python@v5
+  #       with:
+  #         python-version: ${{ matrix.python-version }}
+  #     - name: Validate upload to PyPI
+  #       env:
+  #         TWINE_USERNAME: __token__
+  #         TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+  #       run: |
+  #         # ldap requirements
+  #         sudo apt update -y
+  #         sudo apt-get install build-essential python3-dev libldap2-dev libsasl2-dev vim -y
+  #         echo '⌛ Wait till package will be updated in PyPI'
+  #         # Verfiy and wait till latest cloud-governance version will be updated in Pypi (timeout 900 seconds)
+  #         timeout=900
+  #         sleep_time=30
+  #         pip --no-cache-dir install setuptools cloud-governance --upgrade
+  #         expected_version=$(python3 setup.py --version)
+  #         build=$(pip freeze | grep cloud-governance | sed 's/==/=/g')
+  #         actual_version="$(cut -d'=' -f2 <<<"$build")"
+  #         current_wait_time=0
+  #         while [[ $current_wait_time < $timeout ]]; do
+  #             if [[ "$expected_version" = "$actual_version" ]]; then
+  #               echo 'cloud-governance version:' $expected_version 'was updated in Pypi'
+  #               break;
+  #             else
+  #               # sleep for x seconds
+  #               echo 'wait' "$((current_wait_time+sleep_time))" 'seconds'
+  #               sleep $sleep_time
+  #               current_wait_time="$((current_wait_time+sleep_time))"
+  #               pip uninstall -y cloud-governance
+  #               pip --no-cache-dir install cloud-governance --upgrade
+  #               build=$(pip freeze | grep cloud-governance | sed 's/==/=/g')
+  #               actual_version="$(cut -d'=' -f2 <<<"$build")"
+  #               if (( $current_wait_time == $timeout )); then
+  #                 echo "cloud-governance lastet version did not update in Pypi after 900 seconds - raise failure"
+  #                 exit 1
+  #               fi
+  #             fi
+  #         done
+
+  # quay_upload:
+  #   name: quay_upload
+  #   needs: [ unittest, terraform_apply, integration, pypi_upload, pypi_validate ]
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     matrix:
+  #       python-version: [ '3.12' ]
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Set up Python ${{ matrix.python-version }}
+  #       uses: actions/setup-python@v5
+  #       with:
+  #         python-version: ${{ matrix.python-version }}
+  #     - name: ⌛ Upload to 🐋 quay.io
+  #       run: |
+  #         pip install setuptools
+  #         version=$(python3 setup.py --version)
+  #         sudo docker build --build-arg VERSION=$version -t quay.io/${{ secrets.QAUYIO_REPOSITORY }}/${{ secrets.PACKAGE_NAME }}:v$version .
+  #         sudo docker build --build-arg VERSION=latest -t quay.io/${{ secrets.QAUYIO_REPOSITORY }}/${{ secrets.PACKAGE_NAME }}:latest .
+  #         sudo docker login quay.io -u ${{ secrets.QAUYIO_ROBOT_USER }} -p ${{ secrets.QAUYIO_ROBOT_TOKEN }}
+  #         sudo docker push quay.io/${{ secrets.QAUYIO_REPOSITORY }}/${{ secrets.PACKAGE_NAME }}:v$version
+  #         sudo docker push quay.io/${{ secrets.QAUYIO_REPOSITORY }}/${{ secrets.PACKAGE_NAME }}:latest
+  #         echo 'Wait 30 sec till image will be updated in quay.io'
+  #         sleep 30
+
+  # bump_version:
+  #   name: bump_version
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     matrix:
+  #       python-version: [ '3.12' ]
+  #   needs: [ unittest, terraform_apply, integration, pypi_upload, pypi_validate, quay_upload ]
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Set up Python ${{ matrix.python-version }}
+  #       uses: actions/setup-python@v5
+  #       with:
+  #         python-version: ${{ matrix.python-version }}
+  #     - name: 🎁 Bump Version
+  #       run: |
+  #         pip install setuptools bumpversion
+  #         version=$(python3 setup.py --version)
+  #         git checkout main
+  #         git config --global user.email ${{ secrets.EMAIL }}
+  #         git config --global user.name  ${{ secrets.NAME }}
+  #         git config pull.rebase false  # merge (the default strategy)
+  #         bumpversion patch
+  #         # GITHUB_REPOSITORY already taken => GIT_REPOSITORY
+  #         git commit .bumpversion.cfg setup.py -m 'bump version to exist version v'$version
+  #         git pull https://${{ secrets.GITHUB_TOKEN }}@${{ secrets.GIT_REPOSITORY}} main
+  #         git push https://${{ secrets.GITHUB_TOKEN }}@${{ secrets.GIT_REPOSITORY}} main
+  #         git push https://${{ secrets.GITHUB_TOKEN }}@${{ secrets.GIT_REPOSITORY}} --tag
+
+  # e2e:
+  #   name: e2e
+  #   needs: [unittest, terraform_apply, integration, pypi_upload, pypi_validate, quay_upload, bump_version]
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     matrix:
+  #       region: ['us-east-1', 'us-east-2', 'us-west-1', 'us-west-2', 'eu-central-1', 'ap-south-1', 'eu-north-1', 'ap-northeast-1', 'ap-southeast-1', 'ap-southeast-2', 'eu-south-1', 'eu-west-3', 'sa-east-1']
+  #       policy: ['instance_idle', 'instance_run', 'unattached_volume',  'ebs_in_use']
+  #       # we don't run zombie_cluster_resource due to long run
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: ✔️ E2E tests using latest quay.io
+  #       env:
+  #         AWS_ACCESS_KEY_ID: ${{ secrets.ACCESS_KEY_ID }}
+  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS_KEY }}
+  #       run: |
+  #         sudo podman run --rm --name cloud-governance -e policy=${{ matrix.policy }} -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -e AWS_DEFAULT_REGION=${{ matrix.region }} -e dry_run=yes -e policy_output=s3://${{ secrets.BUCKET }}/test/${{ matrix.region }} -e log_level=INFO quay.io/ebattat/cloud-governance
+  # gitleaks:
+  #   name: gitleaks
+  #   needs: [ unittest, terraform_apply, integration, pypi_upload, pypi_validate, quay_upload, bump_version ]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: run gitleaks
+  #       env:
+  #         AWS_ACCESS_KEY_ID: ${{ secrets.ACCESS_KEY_ID }}
+  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS_KEY }}
+  #       run: |
+  #         # gileaks policy
+  #         # GITHUB_TOKEN already taken => GIT_TOKEN
+  #         region='us-east-1'
+  #         policy='gitleaks'
+  #         sudo podman run --rm --name cloud-governance -e policy=$policy -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -e AWS_DEFAULT_REGION=$region -e git_access_token=${{ secrets.GIT_TOKEN }} -e git_repo=https://github.com/redhat-performance/cloud-governance -e policy_output=s3://${{ secrets.BUCKET }}/test/$region -e log_level=INFO quay.io/ebattat/cloud-governance > /dev/null
