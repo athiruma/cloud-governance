@@ -35,6 +35,7 @@ jobs:
           git pull
           git push 
           git push --tag
+          echo "Completed"
   # unittest:
   #   name: unittest
   #   runs-on: ubuntu-latest
