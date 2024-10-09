@@ -51,7 +51,7 @@ class DeleteEC2Resources:
         self.efs_client = boto3.client('efs', region_name=region)
 
     @typeguard.typechecked
-    def delete_zombie_resource(self, resource: str, resource_id: str,  cluster_tag: str = '', vpc_id: str = '',
+    def delete_zombie_resource(self, resource: str, resource_id: str, cluster_tag: str = '', vpc_id: str = '',
                                deletion_type: str = '', pending_resources: dict = ''):
         """
         This method filter the resource and call to delete resource function
@@ -121,94 +121,6 @@ class DeleteEC2Resources:
         return result
 
     @typeguard.typechecked
-    def __delete_load_balancer(self, resource_id: str):
-        """
-        Delete the Load Balancer based on LoadBalancer ID
-        :param resource_id:
-        :return:
-        """
-        load_balancers = self.ec2_operations.get_load_balancers()
-        for load_balancer in load_balancers:
-            if load_balancer.get('LoadBalancerName') == resource_id:
-                tags = self.elb_client.describe_tags(LoadBalancerNames=[resource_id])
-                if tags['TagDescriptions']:
-                    for item in tags['TagDescriptions']:
-                        if item.get('Tags'):
-                            if self.__is_cluster_resource(item.get('Tags'), self.cluster_tag):
-                                try:
-                                    self.elb_client.delete_load_balancer(LoadBalancerName=resource_id)
-                                    logger.info(f'delete_load_balancer: {resource_id}')
-                                except Exception as err:
-                                    logger.exception(f'Cannot delete_load_balancer: {resource_id}, {err}')
-
-    @typeguard.typechecked
-    def __delete_load_balancer_v2(self, resource_id: str):
-        """
-        Delete the Load Balancer based on LoadBalancer ID
-        :param resource_id:
-        :return:
-        """
-        load_balances = self.elbv2_client.describe_load_balancers()['LoadBalancers']
-        for load_balancer in load_balances:
-            if load_balancer.get('LoadBalancerArn').endswith(resource_id):
-                tags = self.elbv2_client.describe_tags(ResourceArns=[load_balancer.get('LoadBalancerArn')])
-                if tags.get('TagDescriptions'):
-                    for item in tags['TagDescriptions']:
-                        if item.get('Tags'):
-                            if self.__is_cluster_resource(item.get('Tags'), self.cluster_tag):
-                                try:
-                                    self.elbv2_client.delete_load_balancer(LoadBalancerArn=load_balancer.get('LoadBalancerArn'))
-                                    logger.info(f'delete_load_balancer: {resource_id}')
-                                except Exception as err:
-                                    logger.exception(f'Cannot delete_load_balancer: {resource_id}, {err}')
-
-    @typeguard.typechecked
-    def __delete_volume(self, resource_id: str):
-        try:
-            logger.info(f'Cluster volumes are handled by ebs_unattached')
-            # self.client.delete_volume(VolumeId=resource_id)
-            # logger.info(f'delete_volume: {resource_id}')
-        except Exception as err:
-            logger.exception(f'Cannot delete_volume: {resource_id}, {err}')
-
-    @typeguard.typechecked
-    def __delete_snapshots(self, resource_id: str):
-        try:
-            self.client.delete_snapshot(SnapshotId=resource_id)
-            logger.info(f'delete_snapshot: {resource_id}')
-        except Exception as err:
-            logger.exception(f'Cannot delete_snapshot: {resource_id}, {err}')
-
-    @typeguard.typechecked
-    def __delete_vpc_endpoints(self, resource_id: str):
-        """
-        This method delete the VPC endpoints based on vpc_endpoint ID
-        :param resource_id:
-        :return:
-        """
-        try:
-            self.client.delete_vpc_endpoints(VpcEndpointIds=[resource_id])
-            logger.info(f'delete_vpc_endpoints: {resource_id}')
-        except Exception as err:
-            logger.exception(f'Cannot delete_vpc_endpoints: {resource_id}, {err}')
-
-    @typeguard.typechecked
-    def __delete_dhcp_options(self, resource_id: str, vpc_id: str = ''):
-        """
-        This method delete the dhcp options in the following order
-        set associate dhcp options in vpc as default --> delete dhcp options
-        :param resource_id:
-        :return:
-        """
-        try:
-            if vpc_id:
-                self.client.associate_dhcp_options(DhcpOptionsId='default', VpcId=vpc_id)
-            self.client.delete_dhcp_options(DhcpOptionsId=resource_id)
-            logger.info(f'delete_dhcp_options: {resource_id}')
-        except Exception as err:
-            logger.exception(f'Cannot delete_dhcp_options: {resource_id}, {err}')
-
-    @typeguard.typechecked
     def __delete_route_table(self, resource_id: str, vpc_id: str):
         """
         This method deleted the Route Table in the following order
@@ -216,7 +128,6 @@ class DeleteEC2Resources:
         :param resource_id:
         :return:
         """
-        # @todo call vpc deletion
         try:
             route_tables = self.ec2_operations.get_route_tables()
             subnets = self.__get_cluster_references(resource_id=resource_id, resource_list=route_tables,
@@ -259,30 +170,44 @@ class DeleteEC2Resources:
         """
         try:
             security_groups = self.ec2_operations.get_security_groups()
-            vpc_security_groups = self.__get_cluster_references(resource_id=vpc_id, resource_list=security_groups, input_resource_id='VpcId', output_result='')
+            vpc_security_groups = self.__get_cluster_references(resource_id=vpc_id, resource_list=security_groups,
+                                                                input_resource_id='VpcId', output_result='')
             for vpc_security_group in vpc_security_groups:
                 if resource_id != vpc_security_group.get('GroupId'):
                     if vpc_security_group.get('GroupName') == 'default':
-                        logger.info(f'Removing the {resource_id} ingress rule from Default Security Group: {vpc_security_group.get("GroupId")}')
+                        logger.info(
+                            f'Removing the {resource_id} ingress rule from Default Security Group: {vpc_security_group.get("GroupId")}')
                         if vpc_security_group.get('IpPermissions'):
                             for ip_permission in vpc_security_group.get('IpPermissions'):
                                 if ip_permission.get('UserIdGroupPairs'):
                                     for user_id_group_pair in ip_permission.get('UserIdGroupPairs'):
                                         if user_id_group_pair.get('GroupId') == resource_id:
-                                            ingress_rule = {'FromPort': ip_permission.get('FromPort'), 'IpProtocol': ip_permission.get('IpProtocol'), 'IpRanges': ip_permission.get('IpRanges'), 'Ipv6Ranges': ip_permission.get('Ipv6Ranges'), 'PrefixListIds': ip_permission.get('PrefixListIds'), 'ToPort': ip_permission.get('ToPort'), 'UserIdGroupPairs': [user_id_group_pair]}
-                                            self.client.revoke_security_group_ingress(GroupId=vpc_security_group.get('GroupId'), IpPermissions=[ingress_rule])
-                                            logger.info(f'Removed the Ingress rules of Security Group {vpc_security_group.get("GroupId")} :: {ingress_rule}')
+                                            ingress_rule = {'FromPort': ip_permission.get('FromPort'),
+                                                            'IpProtocol': ip_permission.get('IpProtocol'),
+                                                            'IpRanges': ip_permission.get('IpRanges'),
+                                                            'Ipv6Ranges': ip_permission.get('Ipv6Ranges'),
+                                                            'PrefixListIds': ip_permission.get('PrefixListIds'),
+                                                            'ToPort': ip_permission.get('ToPort'),
+                                                            'UserIdGroupPairs': [user_id_group_pair]}
+                                            self.client.revoke_security_group_ingress(
+                                                GroupId=vpc_security_group.get('GroupId'), IpPermissions=[ingress_rule])
+                                            logger.info(
+                                                f'Removed the Ingress rules of Security Group {vpc_security_group.get("GroupId")} :: {ingress_rule}')
                     else:
                         if vpc_security_group.get('Tags'):
-                            if self.__is_cluster_resource(tags=vpc_security_group.get('Tags'), cluster_tag=self.cluster_tag):
+                            if self.__is_cluster_resource(tags=vpc_security_group.get('Tags'),
+                                                          cluster_tag=self.cluster_tag):
                                 logger.info(vpc_security_group.get('GroupId'))
                                 if vpc_security_group.get('IpPermissions'):
                                     for ip_permission in vpc_security_group.get('IpPermissions'):
                                         if ip_permission.get('UserIdGroupPairs'):
                                             for user_id_group_pair in ip_permission.get('UserIdGroupPairs'):
                                                 if user_id_group_pair.get('GroupId') == resource_id:
-                                                    self.client.revoke_security_group_ingress(GroupId=vpc_security_group.get('GroupId'), IpPermissions=[ip_permission])
-                                                    logger.info(f'Removed the Ingress rules of Security Group {resource_id} from {vpc_security_group.get("GroupId")}')
+                                                    self.client.revoke_security_group_ingress(
+                                                        GroupId=vpc_security_group.get('GroupId'),
+                                                        IpPermissions=[ip_permission])
+                                                    logger.info(
+                                                        f'Removed the Ingress rules of Security Group {resource_id} from {vpc_security_group.get("GroupId")}')
             network_interfaces = self.ec2_operations.get_network_interface()
             network_interface_ids = self.__get_cluster_references(resource_id=vpc_id, resource_list=network_interfaces,
                                                                   input_resource_id='VpcId',
@@ -296,8 +221,12 @@ class DeleteEC2Resources:
                     if self.__is_cluster_resource(network_interface.get('TagSet'), cluster_tag=self.cluster_tag):
                         logger.info(network_interface.get('NetworkInterfaceId'))
                         for security_group in network_interface.get('Groups'):
-                            if security_group.get('GroupId') == resource_id and default_security_group_id != security_group.get('GroupId'):
-                                self.client.modify_network_interface_attribute(Groups=[default_security_group_id], NetworkInterfaceId=network_interface.get('NetworkInterfaceId'))
+                            if security_group.get(
+                                    'GroupId') == resource_id and default_security_group_id != security_group.get(
+                                'GroupId'):
+                                self.client.modify_network_interface_attribute(Groups=[default_security_group_id],
+                                                                               NetworkInterfaceId=network_interface.get(
+                                                                                   'NetworkInterfaceId'))
             if resource_id == default_security_group_id:
                 logger.info(f'default security group: {resource_id} is deleted by vpc: {vpc_id} ')
             else:
@@ -314,11 +243,15 @@ class DeleteEC2Resources:
         :return:
         """
         try:
-            nat_gateway = self.client.describe_nat_gateways(Filter=[{'Name': 'nat-gateway-id', 'Values': [resource_id]}])['NatGateways'][0]
+            nat_gateway = \
+                self.client.describe_nat_gateways(Filter=[{'Name': 'nat-gateway-id', 'Values': [resource_id]}])[
+                    'NatGateways'][0]
             if nat_gateway.get('State') == 'available':
                 self.client.delete_nat_gateway(NatGatewayId=resource_id)
                 while nat_gateway.get('State') != 'deleted':
-                    nat_gateway = self.client.describe_nat_gateways(Filter=[{'Name': 'nat-gateway-id', 'Values': [resource_id]}])['NatGateways'][0]
+                    nat_gateway = \
+                        self.client.describe_nat_gateways(Filter=[{'Name': 'nat-gateway-id', 'Values': [resource_id]}])[
+                            'NatGateways'][0]
                     time.sleep(self.SLEEP_TIME)
                 logger.info(f'delete_nat_gateway: {resource_id}')
         except Exception as err:
@@ -382,26 +315,6 @@ class DeleteEC2Resources:
                 logger.info(f'delete_network_interface: {resource_id}')
         except Exception as err:
             logger.exception(f'Cannot disassociate_address: {resource_id}, {err}')
-
-    def __delete_efs(self, resource_id: str):
-        """
-        This method deletes the EFS file system
-        @param resource_id:
-        @return:
-        """
-        efs_data = self.efs_client.describe_file_systems()['FileSystems']
-
-        for efs in efs_data:
-            if efs.get('FileSystemId') == resource_id:
-                efsmt_data = self.efs_client.describe_mount_targets(FileSystemId=resource_id)['MountTargets']
-                for efsmt in efsmt_data:
-                    self.efs_client.delete_mount_target(MountTargetId=efsmt.get('MountTargetId'))
-                    logger.info(f'deleted Efs Mount target {efsmt.get("MountTargetId")}')
-                try:
-                    self.efs_client.delete_file_system(FileSystemId=efs.get('FileSystemId'))
-                except Exception as err:
-                    logger.info(f'{err}')
-                logger.info(f'Deleted the EFS file system {efs.get("FileSystemId")}')
 
     @typeguard.typechecked
     def network_interface(self, subnet_id: str = ''):
@@ -477,7 +390,8 @@ class DeleteEC2Resources:
                         if self.__is_cluster_resource(network_interface.get('TagSet'), self.cluster_tag):
                             self.__delete_network_interface(network_interface.get('NetworkInterfaceId'))
                         else:
-                            logger.info(f'This network interface Id : {network_interface.get("NetworkInterfaceId")} not a zombie cluster resource')
+                            logger.info(
+                                f'This network interface Id : {network_interface.get("NetworkInterfaceId")} not a zombie cluster resource')
             else:
                 self.client.release_address(AllocationId=resource_id)
                 logger.info(f'release_address: {resource_id}')
@@ -501,12 +415,15 @@ class DeleteEC2Resources:
             for vpc_peering in vpc_peerings:
                 if vpc_peering.get('Status').get('Code') == 'active':
                     if vpc_peering.get('RequesterVpcInfo').get('VpcId') == resource_id:
-                        self.client.delete_vpc_peering_connection(VpcPeeringConnectionId=vpc_peering.get('VpcPeeringConnectionId'))
+                        self.client.delete_vpc_peering_connection(
+                            VpcPeeringConnectionId=vpc_peering.get('VpcPeeringConnectionId'))
                     elif vpc_peering.get('AccepterVpcInfo').get('VpcId') == resource_id:
-                        self.client.delete_vpc_peering_connection(VpcPeeringConnectionId=vpc_peering.get('VpcPeeringConnectionId'))
+                        self.client.delete_vpc_peering_connection(
+                            VpcPeeringConnectionId=vpc_peering.get('VpcPeeringConnectionId'))
                 elif vpc_peering.get('Status').get('Code') == 'pending-acceptance':
                     if vpc_peering.get('RequesterVpcInfo').get('VpcId') == resource_id:
-                        self.client.delete_vpc_peering_connection(VpcPeeringConnectionId=vpc_peering.get('VpcPeeringConnectionId'))
+                        self.client.delete_vpc_peering_connection(
+                            VpcPeeringConnectionId=vpc_peering.get('VpcPeeringConnectionId'))
             self.client.delete_vpc(VpcId=resource_id)
             logger.info(f'delete_vpc: {resource_id}')
         except Exception as err:
