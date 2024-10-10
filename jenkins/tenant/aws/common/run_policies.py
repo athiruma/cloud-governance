@@ -113,17 +113,17 @@ def run_policies(policies: list, dry_run: str = 'yes'):
 
 run_cmd(f"echo Running the cloud_governance policies with dry_run=yes")
 run_cmd(f"echo Polices list: {policies_not_action}")
-run_policies(policies=policies_not_action)
+run_policies(policies=['cluster_run'])
 
-run_cmd('echo "Running the CloudGovernance policies with dry_run=no" ')
-run_cmd(f"echo Polices list: {policies_in_action}")
-run_policies(policies=policies_in_action, dry_run='no')
-
-run_cmd(f"""echo "Running the tag_iam_user" """)
-run_cmd(
-    f"""podman run --rm --name cloud-governance-poc-haim --net="host" -e account="{account_name}" -e EMAIL_ALERT="False" -e policy="tag_iam_user" -e AWS_ACCESS_KEY_ID="{access_key}" -e AWS_SECRET_ACCESS_KEY="{secret_key}" -e user_tag_operation="update" -e SPREADSHEET_ID="{SPREADSHEET_ID}" -e GOOGLE_APPLICATION_CREDENTIALS="{GOOGLE_APPLICATION_CREDENTIALS}" -v "{GOOGLE_APPLICATION_CREDENTIALS}":"{GOOGLE_APPLICATION_CREDENTIALS}" -e LDAP_HOST_NAME="{LDAP_HOST_NAME}"  -e log_level="INFO" {QUAY_CLOUD_GOVERNANCE_REPOSITORY}""")
-
-# Run the AggMail
-
-run_cmd(
-    f"""podman run --rm --name cloud-governance-haim --net="host" -e account="{account_name}" -e policy="send_aggregated_alerts" -e AWS_ACCESS_KEY_ID="{access_key}" -e AWS_SECRET_ACCESS_KEY="{secret_key}" -e LDAP_HOST_NAME="{LDAP_HOST_NAME}"  -e log_level="INFO" -e es_host="{ES_HOST}" -e es_port="{ES_PORT}" {env_es_index} -e ADMIN_MAIL_LIST="{ADMIN_MAIL_LIST}" -e ALERT_DRY_RUN="{ALERT_DRY_RUN}" {QUAY_CLOUD_GOVERNANCE_REPOSITORY}""")
+# run_cmd('echo "Running the CloudGovernance policies with dry_run=no" ')
+# run_cmd(f"echo Polices list: {policies_in_action}")
+# run_policies(policies=policies_in_action, dry_run='no')
+#
+# run_cmd(f"""echo "Running the tag_iam_user" """)
+# run_cmd(
+#     f"""podman run --rm --name cloud-governance-poc-haim --net="host" -e account="{account_name}" -e EMAIL_ALERT="False" -e policy="tag_iam_user" -e AWS_ACCESS_KEY_ID="{access_key}" -e AWS_SECRET_ACCESS_KEY="{secret_key}" -e user_tag_operation="update" -e SPREADSHEET_ID="{SPREADSHEET_ID}" -e GOOGLE_APPLICATION_CREDENTIALS="{GOOGLE_APPLICATION_CREDENTIALS}" -v "{GOOGLE_APPLICATION_CREDENTIALS}":"{GOOGLE_APPLICATION_CREDENTIALS}" -e LDAP_HOST_NAME="{LDAP_HOST_NAME}"  -e log_level="INFO" {QUAY_CLOUD_GOVERNANCE_REPOSITORY}""")
+#
+# # Run the AggMail
+#
+# run_cmd(
+#     f"""podman run --rm --name cloud-governance-haim --net="host" -e account="{account_name}" -e policy="send_aggregated_alerts" -e AWS_ACCESS_KEY_ID="{access_key}" -e AWS_SECRET_ACCESS_KEY="{secret_key}" -e LDAP_HOST_NAME="{LDAP_HOST_NAME}"  -e log_level="INFO" -e es_host="{ES_HOST}" -e es_port="{ES_PORT}" {env_es_index} -e ADMIN_MAIL_LIST="{ADMIN_MAIL_LIST}" -e ALERT_DRY_RUN="{ALERT_DRY_RUN}" {QUAY_CLOUD_GOVERNANCE_REPOSITORY}""")
