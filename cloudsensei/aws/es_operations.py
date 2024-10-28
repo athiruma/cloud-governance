@@ -15,7 +15,12 @@ class ESOperations:
 
     def __init__(self):
         self.__es_server = os.environ.get('ES_SERVER')
-        self.__es = Elasticsearch(self.__es_server)
+        self.__es_user = os.environ.get('ES_USER')
+        self.__es_passwd = os.environ.get('ES_PORT')
+        if self.__es_user:
+            self.__es = Elasticsearch(self.__es_server, basic_auth=(self.__es_user, self.__es_passwd))
+        else:
+            self.__es = Elasticsearch(self.__es_server)
 
     def upload_to_es(self, data: dict, **kwargs):
         """
