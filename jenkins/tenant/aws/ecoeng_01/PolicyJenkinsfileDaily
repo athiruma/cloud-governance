@@ -1,16 +1,16 @@
-accounts_list = ['industry-partners': "hhalbfin@redhat.com",
-                 'certification-pipeline': "matt.dorn@redhat.com, mhillsma@redhat.com, babak@redhat.com, hhalbfin@redhat.com",
-                 'ecoengverticals-qe': "augol@redhat.com, hhalbfin@redhat.com",
-                 'emerge-partner': "jsalomon@redhat.com, ltomasbo@redhat.com, hhalbfin@redhat.com",
-                 'telco5g-ci': "yjoseph@redhat.com, hhalbfin@redhat.com, sshnaidm@redhat.com",
-                 'ecoeng-sap': "cbrune@redhat.com, ksatarin@redhat.com, babak@redhat.com, hhalbfin@redhat.com",
-                 'sysdeseng': "scollier@redhat.com, hhalbfin@redhat.com, mavazque@redhat.com",
-                 'appeng-ai': "matrujil@redhat.com, mmikhail@redhat.com, babak@redhat.com, hhalbfin@redhat.com",
-                 'verticals-ui': "brotman@redhat.com, hhalbfin@redhat.com",
-                 'special-projects': "chen.yosef@redhat.com, hhalbfin@redhat.com",
-                 'edgeinfra': "lgamliel@redhat.com, bthurber@redhat.com, oourfali@redhat.com, hhalbfin@redhat.com",
-                 'specialprojects-qe': "augol@redhat.com, hhalbfin@redhat.com",
-                 'partnerlab': "matt.dorn@redhat.com, jomckenz@redhat.com, babak@redhat.com, hhalbfin@redhat.com, mrhillsman@redhat.com",
+accounts_list = [ // 'industry-partners': "hhalbfin@redhat.com",
+                 // 'certification-pipeline': "matt.dorn@redhat.com, mhillsma@redhat.com, babak@redhat.com, hhalbfin@redhat.com",
+                  // 'ecoengverticals-qe': "augol@redhat.com, hhalbfin@redhat.com",
+                 // 'emerge-partner': "jsalomon@redhat.com, ltomasbo@redhat.com, hhalbfin@redhat.com",
+                 // 'telco5g-ci': "yjoseph@redhat.com, hhalbfin@redhat.com, sshnaidm@redhat.com",
+                 // 'ecoeng-sap': "cbrune@redhat.com, ksatarin@redhat.com, babak@redhat.com, hhalbfin@redhat.com",
+                 // 'sysdeseng': "scollier@redhat.com, hhalbfin@redhat.com, mavazque@redhat.com",
+                 // 'appeng-ai': "matrujil@redhat.com, mmikhail@redhat.com, babak@redhat.com, hhalbfin@redhat.com",
+                 // 'verticals-ui': "brotman@redhat.com, hhalbfin@redhat.com",
+                 // 'special-projects': "chen.yosef@redhat.com, hhalbfin@redhat.com",
+                 // 'edgeinfra': "lgamliel@redhat.com, bthurber@redhat.com, oourfali@redhat.com, hhalbfin@redhat.com",
+                 // 'specialprojects-qe': "augol@redhat.com, hhalbfin@redhat.com",
+                 // 'partnerlab': "matt.dorn@redhat.com, jomckenz@redhat.com, babak@redhat.com, hhalbfin@redhat.com, mrhillsman@redhat.com",
                  'blueprints': "abeekhof@redhat.com, hhalbfin@redhat.com"
                  ]
 pipeline {
@@ -49,23 +49,6 @@ pipeline {
         stage('Initial Cleanup') {
             steps {
                  sh '''if [[ "$(podman images -q ${QUAY_CLOUD_GOVERNANCE_REPOSITORY} 2> /dev/null)" != "" ]]; then podman rmi -f $(podman images -q ${QUAY_CLOUD_GOVERNANCE_REPOSITORY} 2> /dev/null); fi'''
-            }
-        }
-        stage('Run Cost Policies') {
-            steps {
-                 script {
-                    for (account in accounts_list.keySet()) {
-                        echo "Running for account ${account.toUpperCase()}"
-                        withCredentials([string(credentialsId: "${account}-aws-access-key-id", variable: 'access_key'),
-                                        string(credentialsId: "${account}-aws-secret-key-id", variable: 'secret_key'),
-                                        string(credentialsId: "${account}-s3-bucket", variable: 's3_bucket')])
-                        {
-                            env.account_name = "${account}"
-                            env.ADMIN_MAIL_LIST = "${accounts_list[account]}"
-                            sh 'python3 jenkins/tenant/aws/common/run_cost_policies.py'
-                        }
-                    }
-                }
             }
         }
         stage('Run Daily Policies') {
